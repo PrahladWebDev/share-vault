@@ -66,15 +66,16 @@ api.interceptors.response.use(
         api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
         return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+     } catch (refreshError) {
+  processQueue(refreshError, null);
+  isRefreshing = false;
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('user');
+  window.dispatchEvent(new Event('auth:logout'));
+  return Promise.reject(refreshError);
+} finally {
+  isRefreshing = false;
+}
     }
 
     return Promise.reject(error);
