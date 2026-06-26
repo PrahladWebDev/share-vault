@@ -34,10 +34,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false);
       return;
     }
-    const timeout = setTimeout(() => {
-      clearUser();
-      setIsLoading(false);
-    }, 35000);
+   
     try {
       const res = await authAPI.getMe();
       saveUser(res.data.data.user, token);
