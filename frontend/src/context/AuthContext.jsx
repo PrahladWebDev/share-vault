@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }) => {
     } catch {
       clearUser();
     } finally {
-      clearTimeout(timeout);
       setIsLoading(false);
     }
   };
