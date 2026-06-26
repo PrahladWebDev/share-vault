@@ -63,7 +63,11 @@ if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       isRefreshing = true;
 
       try {
-        const response = await api.post('/auth/refresh-token');
+      const response = await api.post(
+  '/auth/refresh-token',
+  {},
+  { withCredentials: true }
+);
         const { accessToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
