@@ -26,7 +26,7 @@ const register = async (req, res, next) => {
     const { name, email, password } = req.body;
     const { user, accessToken, refreshToken } = await authService.registerUser(name, email, password);
 
-  res.cookie('refreshToken', refreshToken, {
+  res.cookie('refreshToken', tokens.refreshToken, {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -45,7 +45,7 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
     const { user, accessToken, refreshToken } = await authService.loginUser(email, password);
 
-  res.cookie('refreshToken', refreshToken, {
+  res.cookie('refreshToken', tokens.refreshToken, {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -84,7 +84,7 @@ const refreshToken = async (req, res, next) => {
 
     const tokens = await authService.refreshAccessToken(token);
 
-  res.cookie('refreshToken', refreshToken, {
+  res.cookie('refreshToken', tokens.refreshToken, {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
