@@ -1,3 +1,4 @@
+```yaml
 name: Deploy ShareVault
 
 on:
@@ -23,24 +24,46 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "=== Pulling latest code ==="
-            cd /home/prahlad/sharevault
-            git pull origin main
+            set -e
 
-            echo "=== Installing backend dependencies ==="
-            cd /home/prahlad/sharevault/backend
+            echo "=================================="
+            echo "Updating ShareVault Repository"
+            echo "=================================="
+
+            cd /home/prahlad/sharevault
+
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+
+            echo "=================================="
+            echo "Current Commit"
+            echo "=================================="
+
+            git log --oneline -1
+            git status
+
+            echo "=================================="
+            echo "Installing Backend Dependencies"
+            echo "=================================="
+
+            cd backend
             npm install --omit=dev
 
-            echo "=== Restarting API with PM2 ==="
+            echo "=================================="
+            echo "Restarting Backend"
+            echo "=================================="
+
             pm2 reload sharevault-api --update-env
 
-            echo "=== Deploy status ==="
+            echo "=================================="
+            echo "PM2 Status"
+            echo "=================================="
+
             pm2 status
 
   # ─────────────────────────────────────────────────────────────────
   # JOB 2: Build & Deploy Frontend
-  # Builds on GitHub (faster than VPS), copies built files via SCP
-  # Runs only after Job 1 succeeds
   # ─────────────────────────────────────────────────────────────────
   deploy-frontend:
     name: Build and Deploy Frontend
@@ -48,28 +71,28 @@ jobs:
     needs: deploy-backend
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm ci
 
-      - name: Build React app for production
+      - name: Build React App
         working-directory: frontend
         env:
           REACT_APP_API_URL: https://api.sharevault.prahladsingh.in/api
           CI: false
         run: npm run build
 
-      - name: Copy build to VPS
+      - name: Upload Build to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -89,4 +112,8 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             sudo systemctl reload nginx
-            echo "=== Frontend deployed ==="
+
+            echo "=================================="
+            echo "Frontend Deployment Complete"
+            echo "=================================="
+```
