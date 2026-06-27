@@ -1,4 +1,4 @@
-```yaml
+
 name: Deploy ShareVault
 
 on:
@@ -116,4 +116,4 @@ jobs:
             echo "=================================="
             echo "Frontend Deployment Complete"
             echo "=================================="
-```
+
