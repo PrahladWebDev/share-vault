@@ -70,11 +70,19 @@ if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
     withCredentials: true
   }
 );
-        const { accessToken } = response.data.data;
-        localStorage.setItem('accessToken', accessToken);
-        api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-        processQueue(null, accessToken);
-        return api(originalRequest);
+    const { accessToken } = response.data.data;
+
+localStorage.setItem('accessToken', accessToken);
+
+api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+
+// Update the retry request
+originalRequest.headers = originalRequest.headers || {};
+originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+processQueue(null, accessToken);
+
+return api(originalRequest);
      } catch (refreshError) {
   processQueue(refreshError, null);
   isRefreshing = false;
