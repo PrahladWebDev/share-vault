@@ -48,7 +48,7 @@ jobs:
             echo "=================================="
 
             cd backend
-            npm install --omit=dev
+           npm ci --omit=dev
 
             echo "=================================="
             echo "Restarting Backend"
