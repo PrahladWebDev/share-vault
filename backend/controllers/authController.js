@@ -26,13 +26,13 @@ const register = async (req, res, next) => {
     const { name, email, password } = req.body;
     const { user, accessToken, refreshToken } = await authService.registerUser(name, email, password);
 
-  res.cookie('refreshToken', tokens.refreshToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  domain: process.env.NODE_ENV === 'production' ? '.prahladsingh.in' : undefined,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+    res.cookie('refreshToken', refreshToken, { // ← FIXED: was tokens.refreshToken
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: '.prahladsingh.in',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return ApiResponse.created(res, { user, accessToken }, 'Registration successful');
   } catch (err) {
@@ -45,13 +45,13 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
     const { user, accessToken, refreshToken } = await authService.loginUser(email, password);
 
-  res.cookie('refreshToken', tokens.refreshToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  domain: process.env.NODE_ENV === 'production' ? '.prahladsingh.in' : undefined,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+    res.cookie('refreshToken', refreshToken, { // ← FIXED: was tokens.refreshToken
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: '.prahladsingh.in',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return ApiResponse.success(res, { user, accessToken }, 'Login successful');
   } catch (err) {
@@ -63,12 +63,13 @@ const logout = async (req, res, next) => {
   try {
     await authService.logoutUser(req.user._id);
 
- res.clearCookie('refreshToken', {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  domain: process.env.NODE_ENV === 'production' ? '.prahladsingh.in' : undefined,
-});
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: '.prahladsingh.in',
+    });
+
     return ApiResponse.success(res, null, 'Logged out successfully');
   } catch (err) {
     next(err);
@@ -77,20 +78,20 @@ const logout = async (req, res, next) => {
 
 const refreshToken = async (req, res, next) => {
   try {
-    const token = req.cookies?.refreshToken || req.body?.refreshToken;
+    const token = req.cookies?.refreshToken;
     if (!token) {
       return ApiResponse.unauthorized(res, 'Refresh token required');
     }
 
     const tokens = await authService.refreshAccessToken(token);
 
-  res.cookie('refreshToken', tokens.refreshToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  domain: process.env.NODE_ENV === 'production' ? '.prahladsingh.in' : undefined,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: '.prahladsingh.in',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     return ApiResponse.success(res, { accessToken: tokens.accessToken }, 'Token refreshed');
   } catch (err) {
@@ -107,8 +108,6 @@ const forgotPassword = async (req, res, next) => {
 
     const resetToken = await authService.generatePasswordResetToken(email);
 
-    // In production, send email here
-    // For now, return token in development only
     const responseData =
       process.env.NODE_ENV === 'development' && resetToken ? { resetToken } : null;
 
@@ -157,12 +156,13 @@ const changePassword = async (req, res, next) => {
 
     await authService.changePassword(req.user._id, currentPassword, newPassword);
 
-   res.clearCookie('refreshToken', {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  domain: process.env.NODE_ENV === 'production' ? '.prahladsingh.in' : undefined,
-});
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: '.prahladsingh.in',
+    });
+
     return ApiResponse.success(res, null, 'Password changed. Please login again');
   } catch (err) {
     next(err);
