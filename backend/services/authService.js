@@ -68,19 +68,33 @@ const loginUser = async (email, password) => {
 
 const refreshAccessToken = async (refreshToken) => {
   const decoded = verifyRefreshToken(refreshToken);
+
   if (!decoded) {
-    throw Object.assign(new Error('Invalid or expired refresh token'), { statusCode: 401 });
+    throw Object.assign(new Error('Invalid or expired refresh token'), {
+      statusCode: 401,
+    });
   }
 
   const user = await User.findById(decoded.id).select('+refreshToken');
+
   if (!user || user.refreshToken !== refreshToken) {
-    throw Object.assign(new Error('Refresh token mismatch'), { statusCode: 401 });
+    throw Object.assign(new Error('Refresh token mismatch'), {
+      statusCode: 401,
+    });
   }
 
-  const tokens = generateTokens(user._id, user.role);
-  await User.findByIdAndUpdate(user._id, { refreshToken: tokens.refreshToken });
+  const accessToken = jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    }
+  );
 
-  return tokens;
+  return {
+    accessToken,
+    refreshToken: user.refreshToken,
+  };
 };
 
 const logoutUser = async (userId) => {
