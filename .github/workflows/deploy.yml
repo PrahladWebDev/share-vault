@@ -32,7 +32,7 @@ jobs:
 
             cd /home/prahlad/sharevault
 
-            git fetch origin
+            git fetch --prune origin
             git reset --hard origin/main
             git clean -fd
 
