@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI } from '../api/auth';
-import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
@@ -27,33 +26,40 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('accessToken');
   }, []);
 
- useEffect(() => {
-  const verifyAuth = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-   
-    try {
-      const res = await authAPI.getMe();
-      saveUser(res.data.data.user, token);
-    } catch {
-      clearUser();
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  verifyAuth();
-}, [saveUser, clearUser]);
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
 
-useEffect(() => {
-  const handleForceLogout = () => {
-    clearUser();
-  };
-  window.addEventListener('auth:logout', handleForceLogout);
-  return () => window.removeEventListener('auth:logout', handleForceLogout);
-}, [clearUser]);
+      try {
+        const res = await authAPI.getMe();
+        saveUser(res.data.data.user, token);
+      } catch {
+        clearUser();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    verifyAuth();
+  }, [saveUser, clearUser]);
+
+  useEffect(() => {
+    const handleForceLogout = () => {
+      clearUser();
+      setIsLoading(false); // ← FIXED: was missing, caused stuck loading
+    };
+    window.addEventListener('auth:logout', handleForceLogout);
+    return () => window.removeEventListener('auth:logout', handleForceLogout);
+  }, [clearUser]);
+
+  // Safety net: never stuck longer than 5 seconds
+  useEffect(() => {
+    const timeout = setTimeout(() => setIsLoading(false), 5000);
+    return () => clearTimeout(timeout);
+  }, []);
 
   const login = async (email, password) => {
     const res = await authAPI.login({ email, password });
