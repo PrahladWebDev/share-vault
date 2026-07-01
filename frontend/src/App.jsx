@@ -23,6 +23,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminFilesPage from './pages/admin/AdminFilesPage';
 import AdminLogsPage from './pages/admin/AdminLogsPage';
+import AdminVideoVaultPage from './pages/admin/AdminVideoVaultPage';
 
 // Public
 import ShareDownloadPage from './pages/ShareDownloadPage';
@@ -95,6 +96,14 @@ function App() {
                 element={
                   <ProtectedRoute adminOnly>
                     <AdminLogsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/videos"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminVideoVaultPage />
                   </ProtectedRoute>
                 }
               />
