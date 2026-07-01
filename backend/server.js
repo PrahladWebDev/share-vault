@@ -16,6 +16,7 @@ const { startCleanupJob } = require('./services/cleanupService');
 const authRoutes = require('./routes/auth');
 const fileRoutes = require('./routes/files');
 const adminRoutes = require('./routes/admin');
+const videoRoutes = require('./routes/videos');
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/videos', videoRoutes);
 
 // 404 Handler
 app.use(notFoundHandler);
