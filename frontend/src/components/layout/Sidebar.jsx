@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Upload, Files, Settings, LogOut,
-  Shield, Users, HardDrive, ScrollText, ChevronRight, Vault
+  Shield, Users, HardDrive, ScrollText, ChevronRight, Vault, Film
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -45,6 +45,7 @@ const Sidebar = ({ onClose }) => {
     { to: '/admin/users', icon: Users, label: 'Users' },
     { to: '/admin/files', icon: HardDrive, label: 'All Files' },
     { to: '/admin/logs', icon: ScrollText, label: 'Cleanup Logs' },
+    { to: '/admin/videos', icon: Film, label: 'Video Vault' },
   ];
 
   return (
