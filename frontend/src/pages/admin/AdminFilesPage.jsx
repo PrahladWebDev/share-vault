@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminAPI } from '../../api/admin';
+import { videosAPI } from '../../api/videos';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
@@ -23,9 +24,10 @@ const AdminFilesPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => adminAPI.deleteFile(id),
+    mutationFn: (target) =>
+      target.type === 'video' ? videosAPI.deleteVideo(target._id) : adminAPI.deleteFile(target._id),
     onSuccess: () => {
-      toast.success('File deleted');
+      toast.success(deleteTarget?.type === 'video' ? 'Video deleted' : 'File deleted');
       setDeleteTarget(null);
       qc.invalidateQueries(['admin-files']);
     },
@@ -94,6 +96,9 @@ const AdminFilesPage = () => {
                         <span className="text-gray-200 truncate max-w-[180px]">
                           {truncateFilename(file.originalName, 28)}
                         </span>
+                        {file.type === 'video' && (
+                          <span className="badge badge-blue">Video</span>
+                        )}
                         {file.isAdminFile && (
                           <span className="badge badge-purple">Admin</span>
                         )}
@@ -105,7 +110,9 @@ const AdminFilesPage = () => {
                     <td className="px-4 py-3 text-gray-400 font-mono text-xs">
                       {formatBytes(file.size)}
                     </td>
-                    <td className="px-4 py-3 text-gray-400 font-mono">{file.downloadCount}</td>
+                    <td className="px-4 py-3 text-gray-400 font-mono">
+                      {file.type === 'video' ? '—' : file.downloadCount}
+                    </td>
                     <td className="px-4 py-3">
                       {file.expiresAt ? (
                         <div className="flex items-center gap-1 text-xs text-yellow-400">
@@ -140,9 +147,9 @@ const AdminFilesPage = () => {
       <ConfirmDialog
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteMutation.mutate(deleteTarget?._id)}
+        onConfirm={() => deleteMutation.mutate(deleteTarget)}
         isLoading={deleteMutation.isLoading}
-        title="Delete File"
+        title={deleteTarget?.type === 'video' ? 'Delete Video' : 'Delete File'}
         message={`Permanently delete "${deleteTarget?.originalName}"?`}
         confirmLabel="Delete"
       />
