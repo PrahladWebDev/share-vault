@@ -3,8 +3,19 @@ import api from './axios';
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 export const videosAPI = {
-  upload: (formData, onProgress) =>
-    api.post('/videos/upload', formData, {
+  // Collections (folders that videos are organized into)
+  createCollection: (payload) => api.post('/videos/collections', payload),
+  getCollections: () => api.get('/videos/collections'),
+  deleteCollection: (id) => api.delete(`/videos/collections/${id}`),
+
+  // `files` is an array of File objects; they all go into the same
+  // collection and are uploaded together in a single request.
+  upload: (files, collectionId, onProgress) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('videos', file));
+    formData.append('collectionId', collectionId);
+
+    return api.post('/videos/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 0,
       onUploadProgress: (evt) => {
@@ -13,7 +24,8 @@ export const videosAPI = {
           onProgress(percent);
         }
       },
-    }),
+    });
+  },
 
   getAllVideos: (params) => api.get('/videos', { params }),
   deleteVideo: (id) => api.delete(`/videos/${id}`),
