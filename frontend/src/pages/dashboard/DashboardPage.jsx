@@ -55,9 +55,9 @@ const DashboardPage = () => {
             <StatCard
               icon={Upload}
               label="Remaining Uploads"
-              value={`${data?.remainingUploads ?? 0}/2`}
-              sub="resets every 24h"
-              color={data?.remainingUploads === 0 ? 'red' : 'green'}
+              value={data?.unlimitedUploads ? '∞/∞' : `${data?.remainingUploads ?? 0}/2`}
+              sub={data?.unlimitedUploads ? 'no daily limit' : 'resets every 24h'}
+              color={!data?.unlimitedUploads && data?.remainingUploads === 0 ? 'red' : 'green'}
             />
             <StatCard
               icon={Download}
@@ -70,7 +70,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Upload limit warning */}
-      {!isLoading && data?.remainingUploads === 0 && (
+      {!isLoading && !data?.unlimitedUploads && data?.remainingUploads === 0 && (
         <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-800/40 rounded-xl flex items-start gap-3">
           <span className="text-xl">⚠️</span>
           <div>
@@ -171,7 +171,9 @@ const DashboardPage = () => {
             <div>
               <p className="text-sm font-semibold text-white">Upload File</p>
               <p className="text-xs text-gray-500">
-                {data?.remainingUploads ?? 0} upload{data?.remainingUploads !== 1 ? 's' : ''} remaining
+                {data?.unlimitedUploads
+                  ? 'Unlimited uploads'
+                  : `${data?.remainingUploads ?? 0} upload${data?.remainingUploads !== 1 ? 's' : ''} remaining`}
               </p>
             </div>
           </Link>
