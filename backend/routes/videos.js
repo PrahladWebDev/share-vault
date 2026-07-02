@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const {
+  createCollection,
+  getAllCollections,
+  deleteCollection,
   uploadVideo,
   getAllVideos,
   getStreamToken,
@@ -18,6 +21,11 @@ router.get('/:id/stream', authenticateVideoStream, streamVideo);
 
 // Everything else uses standard header-based admin auth.
 router.use(authenticate, adminOnly);
+
+// Collections (folders) that videos are organized into.
+router.post('/collections', createCollection);
+router.get('/collections', getAllCollections);
+router.delete('/collections/:id', deleteCollection);
 
 router.post('/upload', uploadLimiter, videoUploadMiddleware, uploadVideo);
 router.get('/', getAllVideos);
