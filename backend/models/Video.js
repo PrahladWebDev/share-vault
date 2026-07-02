@@ -8,6 +8,12 @@ const videoSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    collection: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Collection',
+      default: null,
+      index: true,
+    },
     originalName: {
       type: String,
       required: true,
