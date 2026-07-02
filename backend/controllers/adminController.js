@@ -2,12 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const User = require('../models/User');
 const File = require('../models/File');
+const Video = require('../models/Video');
 const CleanupLog = require('../models/CleanupLog');
 const { performFileDeletion } = require('../services/fileService');
 const { runCleanup } = require('../services/cleanupService');
 const ApiResponse = require('../utils/apiResponse');
 const logger = require('../utils/logger');
 const { UPLOADS_DIR } = require('../middleware/upload');
+const { VIDEOS_DIR } = require('../middleware/videoUpload');
 
 const getAdminDashboard = async (req, res, next) => {
   try {
@@ -20,6 +22,7 @@ const getAdminDashboard = async (req, res, next) => {
       uploadsToday,
       downloadStats,
       storageStats,
+      videoStorageStats,
       expiredToday,
       recentUploads,
     ] = await Promise.all([
@@ -28,6 +31,7 @@ const getAdminDashboard = async (req, res, next) => {
       File.countDocuments({ uploadedAt: { $gte: todayStart } }),
       File.aggregate([{ $group: { _id: null, total: { $sum: '$downloadCount' } } }]),
       File.aggregate([{ $group: { _id: null, total: { $sum: '$size' } } }]),
+      Video.aggregate([{ $group: { _id: null, total: { $sum: '$size' }, count: { $sum: 1 } } }]),
       CleanupLog.countDocuments({ deletedAt: { $gte: todayStart }, reason: 'expired' }),
       File.find({ isExpired: false })
         .sort({ uploadedAt: -1 })
@@ -36,23 +40,40 @@ const getAdminDashboard = async (req, res, next) => {
         .lean(),
     ]);
 
-    // Get disk usage
+    const fileStorageTotal = storageStats[0]?.total || 0;
+    const videoStorageTotal = videoStorageStats[0]?.total || 0;
+    const videoCount = videoStorageStats[0]?.count || 0;
+
+    // Get disk usage (regular files + admin-only videos)
     let diskUsage = { total: 0, files: 0 };
-    try {
-      const uploadsPath = path.resolve(UPLOADS_DIR);
-      if (fs.existsSync(uploadsPath)) {
-        const files = fs.readdirSync(uploadsPath);
-        diskUsage.files = files.length;
-        for (const file of files) {
-          try {
-            const stat = fs.statSync(path.join(uploadsPath, file));
-            diskUsage.total += stat.size;
-          } catch {}
+
+    const scanDir = (dirPath) => {
+      let total = 0;
+      let count = 0;
+      try {
+        const resolved = path.resolve(dirPath);
+        if (fs.existsSync(resolved)) {
+          const entries = fs.readdirSync(resolved);
+          count = entries.length;
+          for (const entry of entries) {
+            try {
+              const stat = fs.statSync(path.join(resolved, entry));
+              total += stat.size;
+            } catch {}
+          }
         }
+      } catch (err) {
+        logger.warn(`Could not read disk usage for ${dirPath}:`, err.message);
       }
-    } catch (err) {
-      logger.warn('Could not read disk usage:', err.message);
-    }
+      return { total, count };
+    };
+
+    const uploadsScan = scanDir(UPLOADS_DIR);
+    const videosScan = scanDir(VIDEOS_DIR);
+
+    diskUsage.total = uploadsScan.total + videosScan.total;
+    diskUsage.files = uploadsScan.count;
+    diskUsage.videoFiles = videosScan.count;
 
     return ApiResponse.success(
       res,
@@ -61,7 +82,10 @@ const getAdminDashboard = async (req, res, next) => {
         totalFiles,
         uploadsToday,
         totalDownloads: downloadStats[0]?.total || 0,
-        storageUsed: storageStats[0]?.total || 0,
+        storageUsed: fileStorageTotal + videoStorageTotal,
+        fileStorageUsed: fileStorageTotal,
+        videoStorageUsed: videoStorageTotal,
+        totalVideos: videoCount,
         diskUsage,
         expiredFilesDeletedToday: expiredToday,
         recentUploads,
