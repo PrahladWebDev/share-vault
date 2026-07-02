@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const File = require('../models/File');
 const User = require('../models/User');
+const Video = require('../models/Video');
 const CleanupLog = require('../models/CleanupLog');
 const { generateShareToken } = require('../utils/tokenGenerator');
 const logger = require('../utils/logger');
@@ -184,7 +185,7 @@ const getUserDashboardData = async (userId) => {
   const windowStart = new Date(Date.now() - ROLLING_WINDOW_MS);
   const todayStart = new Date(now.setHours(0, 0, 0, 0));
 
-  const [user, totalFiles, uploadsToday, uploadsInWindow, totalDownloads] = await Promise.all([
+  const [user, totalFiles, uploadsToday, uploadsInWindow, totalDownloads, videoStats] = await Promise.all([
     User.findById(userId),
     File.countDocuments({ owner: userId, isExpired: false }),
     File.countDocuments({ owner: userId, uploadedAt: { $gte: todayStart } }),
@@ -193,6 +194,10 @@ const getUserDashboardData = async (userId) => {
       { $match: { owner: userId } },
       { $group: { _id: null, total: { $sum: '$downloadCount' } } },
     ]),
+    Video.aggregate([
+      { $match: { uploadedBy: userId } },
+      { $group: { _id: null, total: { $sum: '$size' }, count: { $sum: 1 } } },
+    ]),
   ]);
 
   const recentFiles = await File.find({ owner: userId, isExpired: false })
@@ -200,9 +205,14 @@ const getUserDashboardData = async (userId) => {
     .limit(5)
     .lean();
 
+  const totalVideos = videoStats[0]?.count || 0;
+  const videoStorageUsed = videoStats[0]?.total || 0;
+
   return {
-    storageUsed: user.usedStorage,
-    totalFiles,
+    storageUsed: user.usedStorage + videoStorageUsed,
+    totalFiles: totalFiles + totalVideos,
+    totalVideos,
+    videoStorageUsed,
     uploadsToday,
     remainingUploads: Math.max(0, DAILY_UPLOAD_LIMIT - uploadsInWindow),
     totalDownloads: totalDownloads[0]?.total || 0,
