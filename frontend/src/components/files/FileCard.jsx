@@ -26,9 +26,14 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false }) => {
       <div className="flex items-start gap-3">
         <div className="text-3xl flex-shrink-0 mt-0.5">{getMimeIcon(file.mimeType)}</div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate" title={file.originalName}>
-            {truncateFilename(file.originalName, 32)}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-white truncate" title={file.originalName}>
+              {truncateFilename(file.originalName, 32)}
+            </p>
+            {file.itemType === 'video' && (
+              <span className="badge badge-purple flex-shrink-0 text-[10px]">Video</span>
+            )}
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-xs text-gray-500">{formatBytes(file.size)}</span>
             <span className="text-gray-700">•</span>
@@ -53,10 +58,12 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false }) => {
       </div>
 
       {/* Download count */}
-      <div className="flex items-center gap-1 mt-3">
-        <Download size={12} className="text-gray-600" />
-        <span className="text-xs text-gray-600">{file.downloadCount || 0} downloads</span>
-      </div>
+      {file.itemType !== 'video' && (
+        <div className="flex items-center gap-1 mt-3">
+          <Download size={12} className="text-gray-600" />
+          <span className="text-xs text-gray-600">{file.downloadCount || 0} downloads</span>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-vault-border">
@@ -69,7 +76,7 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false }) => {
             {copied ? 'Copied' : 'Copy Link'}
           </button>
         )}
-        {onShare && (
+        {onShare && file.itemType !== 'video' && (
           <button
             onClick={() => onShare(file)}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
