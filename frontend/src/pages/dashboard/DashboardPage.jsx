@@ -127,9 +127,14 @@ const DashboardPage = () => {
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{getMimeIcon(file.mimeType)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
-                        {truncateFilename(file.originalName, 40)}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-white truncate">
+                          {truncateFilename(file.originalName, 40)}
+                        </p>
+                        {file.itemType === 'video' && (
+                          <span className="badge badge-purple flex-shrink-0 text-[10px]">Video</span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {formatBytes(file.size)} · {formatRelativeTime(file.uploadedAt)}
                       </p>
