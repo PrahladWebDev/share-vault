@@ -4,6 +4,7 @@ const { generateStoredFilename } = require('../utils/tokenGenerator');
 const logger = require('../utils/logger');
 
 const VIDEOS_DIR = process.env.VIDEOS_DIR || './videos';
+const MAX_FILES_PER_UPLOAD = 20;
 
 // Ensure videos directory exists
 if (!fs.existsSync(VIDEOS_DIR)) {
@@ -32,12 +33,14 @@ const videoFileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
+// Accepts multiple files in a single request under the "videos" field so an
+// admin can upload several videos into a collection at once.
 const videoUploadMiddleware = (req, res, next) => {
   const upload = multer({
     storage,
     fileFilter: videoFileFilter,
     limits: {}, // No size limit — admin only
-  }).single('video');
+  }).array('videos', MAX_FILES_PER_UPLOAD);
 
   upload(req, res, (err) => {
     if (err) {
@@ -47,4 +50,4 @@ const videoUploadMiddleware = (req, res, next) => {
   });
 };
 
-module.exports = { videoUploadMiddleware, VIDEOS_DIR };
+module.exports = { videoUploadMiddleware, VIDEOS_DIR, MAX_FILES_PER_UPLOAD };
