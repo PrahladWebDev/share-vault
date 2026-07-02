@@ -191,21 +191,15 @@ const DashboardPage = () => {
             </div>
           </Link>
 
-          {/* Storage bar */}
+          {/* Storage */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-semibold text-white">Storage</p>
               <p className="text-xs text-gray-500">{formatBytes(data?.storageUsed || 0)} used</p>
             </div>
-            <div className="w-full bg-vault-muted rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-brand-600 to-brand-400 h-2 rounded-full transition-all"
-                style={{
-                  width: `${Math.min(100, ((data?.storageUsed || 0) / (500 * 1024 * 1024)) * 100)}%`,
-                }}
-              />
-            </div>
-            <p className="text-xs text-gray-600 mt-2">500 MB limit per upload</p>
+            <p className="text-xs text-gray-600">
+              {data?.unlimitedUploads ? 'No file size limit' : 'Max 500 MB per file'}
+            </p>
           </div>
         </div>
       </div>
