@@ -54,21 +54,9 @@ const AdminDashboardPage = () => {
         ) : (
           <>
             <StatCard icon={Users} label="Total Users" value={data?.totalUsers ?? 0} color="blue" />
-            <StatCard
-              icon={Files}
-              label="Total Files"
-              value={(data?.totalFiles ?? 0) + (data?.totalVideos ?? 0)}
-              sub={`${data?.totalFiles ?? 0} files · ${data?.totalVideos ?? 0} videos`}
-              color="purple"
-            />
+            <StatCard icon={Files} label="Total Files" value={data?.totalFiles ?? 0} color="purple" />
             <StatCard icon={Download} label="Total Downloads" value={data?.totalDownloads ?? 0} color="green" />
-            <StatCard
-              icon={HardDrive}
-              label="Storage Used"
-              value={formatBytes(data?.storageUsed || 0)}
-              sub={`${formatBytes(data?.fileStorageUsed || 0)} files · ${formatBytes(data?.videoStorageUsed || 0)} videos`}
-              color="brand"
-            />
+            <StatCard icon={HardDrive} label="Storage Used" value={formatBytes(data?.storageUsed || 0)} color="brand" />
           </>
         )}
       </div>
