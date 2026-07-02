@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { filesAPI } from '../../api/files';
+import { videosAPI } from '../../api/videos';
 import FileCard from '../../components/files/FileCard';
 import ShareDialog from '../../components/files/ShareDialog';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -27,9 +28,10 @@ const MyFilesPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => filesAPI.deleteFile(id),
+    mutationFn: (file) =>
+      file.itemType === 'video' ? videosAPI.deleteVideo(file._id) : filesAPI.deleteFile(file._id),
     onSuccess: () => {
-      toast.success('File deleted');
+      toast.success(deleteTarget?.itemType === 'video' ? 'Video deleted' : 'File deleted');
       setDeleteTarget(null);
       qc.invalidateQueries(['my-files']);
       qc.invalidateQueries(['dashboard-stats']);
@@ -141,7 +143,7 @@ const MyFilesPage = () => {
       <ConfirmDialog
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteMutation.mutate(deleteTarget?._id)}
+        onConfirm={() => deleteMutation.mutate(deleteTarget)}
         isLoading={deleteMutation.isLoading}
         title="Delete File"
         message={`Are you sure you want to delete "${deleteTarget?.originalName}"? This cannot be undone.`}
