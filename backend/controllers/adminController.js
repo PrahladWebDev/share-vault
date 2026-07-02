@@ -24,7 +24,8 @@ const getAdminDashboard = async (req, res, next) => {
       storageStats,
       videoStorageStats,
       expiredToday,
-      recentUploads,
+      recentFileUploads,
+      recentVideoUploads,
     ] = await Promise.all([
       User.countDocuments({ role: 'user' }),
       File.countDocuments({ isExpired: false }),
@@ -38,11 +39,29 @@ const getAdminDashboard = async (req, res, next) => {
         .limit(10)
         .populate('owner', 'name email')
         .lean(),
+      Video.find()
+        .sort({ uploadedAt: -1 })
+        .limit(10)
+        .populate('uploadedBy', 'name email')
+        .lean(),
     ]);
 
     const fileStorageTotal = storageStats[0]?.total || 0;
     const videoStorageTotal = videoStorageStats[0]?.total || 0;
     const videoCount = videoStorageStats[0]?.count || 0;
+
+    // Merge recent files + recent videos into a single activity feed
+    const recentUploads = [
+      ...recentFileUploads.map((f) => ({ ...f, itemType: 'file' })),
+      ...recentVideoUploads.map((v) => ({
+        ...v,
+        itemType: 'video',
+        owner: v.uploadedBy,
+        downloadCount: null,
+      })),
+    ]
+      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
+      .slice(0, 10);
 
     // Get disk usage (regular files + admin-only videos)
     let diskUsage = { total: 0, files: 0 };
