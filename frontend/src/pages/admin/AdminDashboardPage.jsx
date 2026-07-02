@@ -4,7 +4,7 @@ import StatCard from '../../components/ui/StatCard';
 import { formatBytes, formatRelativeTime, getMimeIcon, truncateFilename, getErrorMessage } from '../../utils/formatters';
 import {
   Users, Files, Download, HardDrive, Upload, Trash2,
-  RefreshCw, Activity, Shield
+  RefreshCw, Activity, Shield, Video
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Spinner from '../../components/ui/Spinner';
@@ -72,6 +72,20 @@ const AdminDashboardPage = () => {
             <StatCard icon={Trash2} label="Expired Today" value={data?.expiredFilesDeletedToday ?? 0} color="red" />
             <StatCard icon={HardDrive} label="Files on Disk" value={data?.diskUsage?.files ?? 0} sub="physical files" color="blue" />
             <StatCard icon={Activity} label="Disk Usage" value={formatBytes(data?.diskUsage?.total || 0)} color="green" />
+          </>
+        )}
+      </div>
+
+      {/* Video stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {isLoading ? (
+          Array(2).fill(0).map((_, i) => (
+            <div key={i} className="card"><div className="skeleton h-16 w-full rounded" /></div>
+          ))
+        ) : (
+          <>
+            <StatCard icon={Video} label="Total Videos" value={data?.totalVideos ?? 0} color="purple" />
+            <StatCard icon={HardDrive} label="Video Storage" value={formatBytes(data?.videoStorageUsed || 0)} color="brand" />
           </>
         )}
       </div>
