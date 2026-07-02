@@ -70,7 +70,7 @@ const AdminDashboardPage = () => {
           <>
             <StatCard icon={Upload} label="Uploads Today" value={data?.uploadsToday ?? 0} color="yellow" />
             <StatCard icon={Trash2} label="Expired Today" value={data?.expiredFilesDeletedToday ?? 0} color="red" />
-            <StatCard icon={HardDrive} label="Files on Disk" value={data?.diskUsage?.files ?? 0} sub="physical files" color="blue" />
+            <StatCard icon={HardDrive} label="Files on Disk" value={(data?.diskUsage?.files ?? 0) + (data?.diskUsage?.videoFiles ?? 0)} sub="physical files" color="blue" />
             <StatCard icon={Activity} label="Disk Usage" value={formatBytes(data?.diskUsage?.total || 0)} color="green" />
           </>
         )}
