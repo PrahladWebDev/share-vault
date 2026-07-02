@@ -210,20 +210,65 @@ const getAllFiles = async (req, res, next) => {
     const search = req.query.search || '';
     const skip = (page - 1) * limit;
 
-    const query = { isExpired: false };
-    if (search) {
-      query.originalName = { $regex: search, $options: 'i' };
-    }
+    const searchMatch = search
+      ? { originalName: { $regex: search, $options: 'i' } }
+      : {};
 
-    const [files, total] = await Promise.all([
-      File.find(query)
-        .sort({ uploadedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('owner', 'name email')
-        .lean(),
-      File.countDocuments(query),
-    ]);
+    // Regular uploads (File collection) and admin-uploaded videos (Video
+    // collection) are stored separately, but the admin "All Files" view
+    // should show both. $unionWith merges them into one sorted, paginated
+    // list rather than the previous File-only query.
+    const pipeline = [
+      { $match: { isExpired: false, ...searchMatch } },
+      { $addFields: { type: 'file', ownerId: '$owner' } },
+      {
+        $unionWith: {
+          coll: 'videos',
+          pipeline: [
+            { $match: searchMatch },
+            { $addFields: { type: 'video', ownerId: '$uploadedBy' } },
+          ],
+        },
+      },
+      { $sort: { uploadedAt: -1 } },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'ownerId',
+                foreignField: '_id',
+                as: 'owner',
+              },
+            },
+            { $unwind: { path: '$owner', preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                originalName: 1,
+                mimeType: 1,
+                size: 1,
+                uploadedAt: 1,
+                downloadCount: 1,
+                expiresAt: 1,
+                isAdminFile: 1,
+                type: 1,
+                'owner._id': 1,
+                'owner.name': 1,
+                'owner.email': 1,
+              },
+            },
+          ],
+          totalCount: [{ $count: 'count' }],
+        },
+      },
+    ];
+
+    const [result] = await File.aggregate(pipeline);
+    const files = result.data;
+    const total = result.totalCount[0]?.count || 0;
 
     return ApiResponse.paginated(
       res,
