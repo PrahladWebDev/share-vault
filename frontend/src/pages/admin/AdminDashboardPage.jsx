@@ -118,10 +118,13 @@ const AdminDashboardPage = () => {
                   <tr key={file._id} className="hover:bg-vault-muted/30 transition-colors">
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-2">
-                        <span>{getMimeIcon(file.mimeType)}</span>
+                        <span>{file.itemType === 'video' ? '🎬' : getMimeIcon(file.mimeType)}</span>
                         <span className="text-gray-200 truncate max-w-[180px]">
                           {truncateFilename(file.originalName, 28)}
                         </span>
+                        {file.itemType === 'video' && (
+                          <span className="badge badge-purple flex-shrink-0 text-[10px]">Video</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 pr-4 text-gray-400 truncate max-w-[120px]">
@@ -130,7 +133,9 @@ const AdminDashboardPage = () => {
                     <td className="py-3 pr-4 text-gray-400 font-mono text-xs">
                       {formatBytes(file.size)}
                     </td>
-                    <td className="py-3 pr-4 text-gray-400 font-mono">{file.downloadCount}</td>
+                    <td className="py-3 pr-4 text-gray-400 font-mono">
+                      {file.itemType === 'video' ? '—' : file.downloadCount}
+                    </td>
                     <td className="py-3 text-gray-500 text-xs">
                       {formatRelativeTime(file.uploadedAt)}
                     </td>
