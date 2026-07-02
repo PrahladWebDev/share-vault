@@ -63,24 +63,31 @@ const generateUniqueShareToken = async () => {
 };
 
 const getUserFiles = async (userId, page = 1, limit = 10, search = '') => {
-  const skip = (page - 1) * limit;
   const query = { owner: userId, isExpired: false };
+  const videoQuery = { uploadedBy: userId };
 
   if (search) {
     query.originalName = { $regex: search, $options: 'i' };
+    videoQuery.originalName = { $regex: search, $options: 'i' };
   }
 
-  const [files, total] = await Promise.all([
-    File.find(query)
-      .sort({ uploadedAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    File.countDocuments(query),
+  const [files, videos] = await Promise.all([
+    File.find(query).sort({ uploadedAt: -1 }).lean(),
+    Video.find(videoQuery).sort({ uploadedAt: -1 }).lean(),
   ]);
 
+  // Files and videos live in separate collections, so merge + sort + paginate in memory
+  const combined = [
+    ...files.map((f) => ({ ...f, itemType: 'file' })),
+    ...videos.map((v) => ({ ...v, itemType: 'video' })),
+  ].sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+
+  const total = combined.length;
+  const skip = (page - 1) * limit;
+  const paged = combined.slice(skip, skip + limit);
+
   return {
-    files,
+    files: paged,
     pagination: {
       page,
       limit,
@@ -200,10 +207,23 @@ const getUserDashboardData = async (userId) => {
     ]),
   ]);
 
-  const recentFiles = await File.find({ owner: userId, isExpired: false })
-    .sort({ uploadedAt: -1 })
-    .limit(5)
-    .lean();
+  const [recentFilesRaw, recentVideosRaw] = await Promise.all([
+    File.find({ owner: userId, isExpired: false })
+      .sort({ uploadedAt: -1 })
+      .limit(5)
+      .lean(),
+    Video.find({ uploadedBy: userId })
+      .sort({ uploadedAt: -1 })
+      .limit(5)
+      .lean(),
+  ]);
+
+  const recentFiles = [
+    ...recentFilesRaw.map((f) => ({ ...f, itemType: 'file' })),
+    ...recentVideosRaw.map((v) => ({ ...v, itemType: 'video' })),
+  ]
+    .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
+    .slice(0, 5);
 
   const totalVideos = videoStats[0]?.count || 0;
   const videoStorageUsed = videoStats[0]?.total || 0;
