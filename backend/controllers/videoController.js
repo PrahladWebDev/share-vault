@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Video = require('../models/Video');
 const Collection = require('../models/Collection');
+const CleanupLog = require('../models/CleanupLog');
 const ApiResponse = require('../utils/apiResponse');
 const logger = require('../utils/logger');
 
@@ -303,13 +304,26 @@ const deleteVideo = async (req, res, next) => {
       return ApiResponse.notFound(res, 'Video not found');
     }
 
+    let fsStatus = 'success';
     if (fs.existsSync(video.path)) {
       try {
         fs.unlinkSync(video.path);
       } catch (err) {
         logger.error(`Failed to delete video from disk: ${video.path}`, err);
+        fsStatus = 'partial';
       }
     }
+
+    await CleanupLog.create({
+      fileId: video._id,
+      userId: video.uploadedBy,
+      originalName: video.originalName,
+      storedName: video.storedName,
+      fileSize: video.size,
+      reason: 'manual_admin',
+      status: fsStatus,
+      deletedAt: new Date(),
+    });
 
     await Video.findByIdAndDelete(id);
 
