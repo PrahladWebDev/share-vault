@@ -79,7 +79,7 @@ const getAdminDashboard = async (req, res, next) => {
       res,
       {
         totalUsers,
-        totalFiles,
+        totalFiles: totalFiles + videoCount,
         uploadsToday,
         totalDownloads: downloadStats[0]?.total || 0,
         storageUsed: fileStorageTotal + videoStorageTotal,
