@@ -227,6 +227,7 @@ const getUserDashboardData = async (userId) => {
 
   const totalVideos = videoStats[0]?.count || 0;
   const videoStorageUsed = videoStats[0]?.total || 0;
+  const isAdmin = user.role === 'admin';
 
   return {
     storageUsed: user.usedStorage + videoStorageUsed,
@@ -234,7 +235,9 @@ const getUserDashboardData = async (userId) => {
     totalVideos,
     videoStorageUsed,
     uploadsToday,
-    remainingUploads: Math.max(0, DAILY_UPLOAD_LIMIT - uploadsInWindow),
+    unlimitedUploads: isAdmin,
+    remainingUploads: isAdmin ? null : Math.max(0, DAILY_UPLOAD_LIMIT - uploadsInWindow),
+    uploadLimit: isAdmin ? null : DAILY_UPLOAD_LIMIT,
     totalDownloads: totalDownloads[0]?.total || 0,
     recentFiles,
     activeShareLinks: recentFiles.filter((f) => f.shareToken).length,
