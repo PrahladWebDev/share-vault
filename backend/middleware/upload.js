@@ -1,14 +1,17 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { generateStoredFilename } = require('../utils/tokenGenerator');
 const logger = require('../utils/logger');
 
-const UPLOADS_DIR = process.env.UPLOADS_DIR || './uploads';
+// Files land here only briefly, in between multer parsing the multipart
+// request and the service layer streaming them into MinIO — then they're
+// deleted. This is NOT where files are permanently stored anymore.
+const TMP_DIR = process.env.TMP_UPLOAD_DIR || path.join(os.tmpdir(), 'sharevault-uploads');
 
-// Ensure uploads directory exists
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+if (!fs.existsSync(TMP_DIR)) {
+  fs.mkdirSync(TMP_DIR, { recursive: true });
 }
 
 // Blocked MIME types for security
@@ -25,7 +28,7 @@ const BLOCKED_EXTENSIONS = ['.exe', '.sh', '.bat', '.cmd', '.com', '.vbs', '.js'
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, UPLOADS_DIR);
+    cb(null, TMP_DIR);
   },
   filename: (req, file, cb) => {
     const storedName = generateStoredFilename(file.originalname);
@@ -76,4 +79,4 @@ const createUploadMiddleware = (req, res, next) => {
   });
 };
 
-module.exports = { createUploadMiddleware, UPLOADS_DIR };
+module.exports = { createUploadMiddleware, TMP_DIR };

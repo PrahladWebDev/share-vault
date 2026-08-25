@@ -30,7 +30,7 @@ jobs:
             echo "Updating ShareVault Repository"
             echo "=================================="
 
-            cd /home/prahlad/sharevault
+            cd /var/www/projects/sharevault
 
             git fetch --prune origin
             git reset --hard origin/main
@@ -100,7 +100,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           source: "frontend/build/*"
-          target: "/home/prahlad/sharevault/frontend/"
+          target: "/var/www/projects/sharevault/frontend/"
           strip_components: 1
 
       - name: Reload Nginx

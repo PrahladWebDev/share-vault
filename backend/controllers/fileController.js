@@ -3,6 +3,7 @@ const fs = require('fs');
 const fileService = require('../services/fileService');
 const ApiResponse = require('../utils/apiResponse');
 const logger = require('../utils/logger');
+const { minioClient, FILES_BUCKET } = require('../config/minio');
 
 const uploadFile = async (req, res, next) => {
   try {
@@ -68,8 +69,11 @@ const downloadFile = async (req, res, next) => {
       return ApiResponse.notFound(res, 'File not found or link has expired');
     }
 
-    if (!fs.existsSync(file.path)) {
-      logger.error(`File missing from disk: ${file.path}`);
+    let objectStream;
+    try {
+      objectStream = await minioClient.getObject(FILES_BUCKET, file.path);
+    } catch (err) {
+      logger.error(`Object missing from MinIO: ${file.path}`, err);
       return ApiResponse.error(res, 'File not available on server', 500);
     }
 
@@ -91,15 +95,14 @@ const downloadFile = async (req, res, next) => {
       'X-Content-Type-Options': 'nosniff',
     });
 
-    const readStream = fs.createReadStream(file.path);
-    readStream.on('error', (err) => {
+    objectStream.on('error', (err) => {
       logger.error(`Read stream error for file ${file._id}:`, err);
       if (!res.headersSent) {
         ApiResponse.error(res, 'Error reading file', 500);
       }
     });
 
-    readStream.pipe(res);
+    objectStream.pipe(res);
   } catch (err) {
     next(err);
   }

@@ -6,7 +6,7 @@ const Video = require('../models/Video');
 const CleanupLog = require('../models/CleanupLog');
 const { generateShareToken } = require('../utils/tokenGenerator');
 const logger = require('../utils/logger');
-const { UPLOADS_DIR } = require('../middleware/upload');
+const { minioClient, FILES_BUCKET } = require('../config/minio');
 
 const DAILY_UPLOAD_LIMIT = 2;
 const ROLLING_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -30,11 +30,19 @@ const saveFileMetadata = async (fileData, userId, isAdmin) => {
 
   const shareToken = await generateUniqueShareToken();
 
+  // Stream the temp file multer wrote to disk straight into the MinIO
+  // bucket, then remove the local temp copy — nothing permanent ever
+  // touches the VPS's own disk.
+  await minioClient.fPutObject(FILES_BUCKET, fileData.filename, fileData.path, {
+    'Content-Type': fileData.mimetype,
+  });
+  fs.unlinkSync(fileData.path);
+
   const file = await File.create({
     owner: userId,
     originalName: fileData.originalname,
     storedName: fileData.filename,
-    path: fileData.path,
+    path: fileData.filename, // MinIO object key within FILES_BUCKET
     mimeType: fileData.mimetype,
     size: fileData.size,
     shareToken,
@@ -48,7 +56,7 @@ const saveFileMetadata = async (fileData, userId, isAdmin) => {
     $inc: { usedStorage: fileData.size },
   });
 
-  logger.info(`File uploaded: ${fileData.filename} by user ${userId}, size: ${fileData.size}`);
+  logger.info(`File uploaded to MinIO: ${fileData.filename} by user ${userId}, size: ${fileData.size}`);
   return file;
 };
 
@@ -133,14 +141,14 @@ const deleteFile = async (fileId, userId, isAdmin = false) => {
 };
 
 const performFileDeletion = async (file, reason) => {
-  // Delete from filesystem
+  // Delete from MinIO. removeObject is idempotent — it doesn't error if the
+  // object is already gone, so this also cleans up cases where a previous
+  // delete partially failed.
   let fsStatus = 'success';
   try {
-    if (fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
-    }
+    await minioClient.removeObject(FILES_BUCKET, file.path);
   } catch (err) {
-    logger.error(`Failed to delete file from disk: ${file.path}`, err);
+    logger.error(`Failed to delete object from MinIO: ${file.path}`, err);
     fsStatus = 'partial';
   }
 

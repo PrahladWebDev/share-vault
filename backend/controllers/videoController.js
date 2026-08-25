@@ -6,6 +6,7 @@ const Collection = require('../models/Collection');
 const CleanupLog = require('../models/CleanupLog');
 const ApiResponse = require('../utils/apiResponse');
 const logger = require('../utils/logger');
+const { minioClient, VIDEOS_BUCKET } = require('../config/minio');
 
 const STREAM_TOKEN_EXPIRY = '30m';
 
@@ -119,13 +120,23 @@ const uploadVideo = async (req, res, next) => {
       return ApiResponse.badRequest(res, 'Selected collection does not exist');
     }
 
+    // Stream each temp file into MinIO before writing metadata. Sequential
+    // (not Promise.all) on purpose — these can be multi-GB files with no
+    // size limit, so we don't want 20 of them uploading to MinIO at once.
+    for (const file of files) {
+      await minioClient.fPutObject(VIDEOS_BUCKET, file.filename, file.path, {
+        'Content-Type': file.mimetype,
+      });
+      fs.unlinkSync(file.path);
+    }
+
     const created = await Video.insertMany(
       files.map((file) => ({
         uploadedBy: req.user._id,
         collection: collection._id,
         originalName: file.originalname,
         storedName: file.filename,
-        path: file.path,
+        path: file.filename, // MinIO object key within VIDEOS_BUCKET
         mimeType: file.mimetype,
         size: file.size,
         uploadedAt: new Date(),
@@ -236,12 +247,14 @@ const streamVideo = async (req, res, next) => {
       return ApiResponse.notFound(res, 'Video not found');
     }
 
-    if (!fs.existsSync(video.path)) {
-      logger.error(`Video missing from disk: ${video.path}`);
+    let stat;
+    try {
+      stat = await minioClient.statObject(VIDEOS_BUCKET, video.path);
+    } catch (err) {
+      logger.error(`Video missing from MinIO: ${video.path}`, err);
       return ApiResponse.error(res, 'Video not available on server', 500);
     }
 
-    const stat = fs.statSync(video.path);
     const fileSize = stat.size;
     const range = req.headers.range;
 
@@ -257,7 +270,7 @@ const streamVideo = async (req, res, next) => {
       }
 
       const chunkSize = end - start + 1;
-      const stream = fs.createReadStream(video.path, { start, end });
+      const stream = await minioClient.getPartialObject(VIDEOS_BUCKET, video.path, start, chunkSize);
 
       res.status(206).set({
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
@@ -281,7 +294,7 @@ const streamVideo = async (req, res, next) => {
         'Accept-Ranges': 'bytes',
       });
 
-      const stream = fs.createReadStream(video.path);
+      const stream = await minioClient.getObject(VIDEOS_BUCKET, video.path);
       stream.on('error', (err) => {
         logger.error(`Read stream error for video ${video._id}:`, err);
         if (!res.headersSent) {
@@ -305,13 +318,11 @@ const deleteVideo = async (req, res, next) => {
     }
 
     let fsStatus = 'success';
-    if (fs.existsSync(video.path)) {
-      try {
-        fs.unlinkSync(video.path);
-      } catch (err) {
-        logger.error(`Failed to delete video from disk: ${video.path}`, err);
-        fsStatus = 'partial';
-      }
+    try {
+      await minioClient.removeObject(VIDEOS_BUCKET, video.path);
+    } catch (err) {
+      logger.error(`Failed to delete video from MinIO: ${video.path}`, err);
+      fsStatus = 'partial';
     }
 
     await CleanupLog.create({

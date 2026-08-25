@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const connectDB = require('./config/database');
+const { initMinio } = require('./config/minio');
 const logger = require('./utils/logger');
 const { globalLimiter } = require('./middleware/rateLimiter');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -87,28 +88,38 @@ app.use(notFoundHandler);
 // Global Error Handler
 app.use(errorHandler);
 
-// Start server
+// Start server — MinIO buckets must exist before we accept traffic, so we
+// wait on initMinio() first rather than letting the first upload discover
+// a missing bucket.
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  logger.info(`ShareVault server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-  startCleanupJob();
-});
 
-// Graceful shutdown
-const gracefulShutdown = (signal) => {
-  logger.info(`${signal} received. Shutting down gracefully...`);
-  server.close(() => {
-    logger.info('HTTP server closed');
-    process.exit(0);
-  });
-  setTimeout(() => {
-    logger.error('Force shutdown after timeout');
+initMinio()
+  .then(() => {
+    const server = app.listen(PORT, () => {
+      logger.info(`ShareVault server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+      startCleanupJob();
+    });
+
+    const gracefulShutdown = (signal) => {
+      logger.info(`${signal} received. Shutting down gracefully...`);
+      server.close(() => {
+        logger.info('HTTP server closed');
+        process.exit(0);
+      });
+      setTimeout(() => {
+        logger.error('Force shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  })
+  .catch((err) => {
+    logger.error('Failed to initialize MinIO — server not started:', err);
     process.exit(1);
-  }, 10000);
-};
+  });
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });

@@ -1,19 +1,23 @@
 const multer = require('multer');
+const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { generateStoredFilename } = require('../utils/tokenGenerator');
 const logger = require('../utils/logger');
 
-const VIDEOS_DIR = process.env.VIDEOS_DIR || './videos';
+// Same idea as middleware/upload.js: temp landing spot only. Videos can be
+// large with no size limit (admin-only), so we always stream file-to-file
+// (temp disk -> MinIO) rather than buffering in memory.
+const VIDEOS_TMP_DIR = process.env.VIDEOS_TMP_DIR || path.join(os.tmpdir(), 'sharevault-videos-tmp');
 const MAX_FILES_PER_UPLOAD = 20;
 
-// Ensure videos directory exists
-if (!fs.existsSync(VIDEOS_DIR)) {
-  fs.mkdirSync(VIDEOS_DIR, { recursive: true });
+if (!fs.existsSync(VIDEOS_TMP_DIR)) {
+  fs.mkdirSync(VIDEOS_TMP_DIR, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, VIDEOS_DIR);
+    cb(null, VIDEOS_TMP_DIR);
   },
   filename: (req, file, cb) => {
     const storedName = generateStoredFilename(file.originalname);
@@ -50,4 +54,4 @@ const videoUploadMiddleware = (req, res, next) => {
   });
 };
 
-module.exports = { videoUploadMiddleware, VIDEOS_DIR, MAX_FILES_PER_UPLOAD };
+module.exports = { videoUploadMiddleware, VIDEOS_TMP_DIR, MAX_FILES_PER_UPLOAD };

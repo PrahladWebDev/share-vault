@@ -25,7 +25,7 @@ if [ ! -f ".env" ]; then
 else
   echo "✓ backend/.env already exists"
 fi
-mkdir -p uploads logs
+mkdir -p logs
 cd ..
 
 # Frontend

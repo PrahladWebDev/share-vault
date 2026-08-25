@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'sharevault-api',
       script: 'server.js',
-      cwd: '/home/prahlad/sharevault/backend',
+      cwd: '/var/www/projects/sharevault/backend',
       instances: 1,
       autorestart: true,
       watch: false,

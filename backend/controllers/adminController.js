@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const User = require('../models/User');
 const File = require('../models/File');
 const Video = require('../models/Video');
@@ -8,8 +6,6 @@ const { performFileDeletion } = require('../services/fileService');
 const { runCleanup } = require('../services/cleanupService');
 const ApiResponse = require('../utils/apiResponse');
 const logger = require('../utils/logger');
-const { UPLOADS_DIR } = require('../middleware/upload');
-const { VIDEOS_DIR } = require('../middleware/videoUpload');
 
 const getAdminDashboard = async (req, res, next) => {
   try {
@@ -65,36 +61,15 @@ const getAdminDashboard = async (req, res, next) => {
       .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
       .slice(0, 10);
 
-    // Get disk usage (regular files + admin-only videos)
-    let diskUsage = { total: 0, files: 0 };
-
-    const scanDir = (dirPath) => {
-      let total = 0;
-      let count = 0;
-      try {
-        const resolved = path.resolve(dirPath);
-        if (fs.existsSync(resolved)) {
-          const entries = fs.readdirSync(resolved);
-          count = entries.length;
-          for (const entry of entries) {
-            try {
-              const stat = fs.statSync(path.join(resolved, entry));
-              total += stat.size;
-            } catch {}
-          }
-        }
-      } catch (err) {
-        logger.warn(`Could not read disk usage for ${dirPath}:`, err.message);
-      }
-      return { total, count };
+    // Storage usage now comes straight from MongoDB rather than scanning a
+    // local uploads/videos directory — with MinIO the actual bytes live on
+    // the object store, but we already track exact sizes/counts per file,
+    // so there's no need to reach out to MinIO just to re-derive totals.
+    const diskUsage = {
+      total: fileStorageTotal + videoStorageTotal,
+      files: totalFiles,
+      videoFiles: videoCount,
     };
-
-    const uploadsScan = scanDir(UPLOADS_DIR);
-    const videosScan = scanDir(VIDEOS_DIR);
-
-    diskUsage.total = uploadsScan.total + videosScan.total;
-    diskUsage.files = uploadsScan.count;
-    diskUsage.videoFiles = videosScan.count;
 
     return ApiResponse.success(
       res,

@@ -1,9 +1,9 @@
 const cron = require('node-cron');
-const fs = require('fs');
 const File = require('../models/File');
 const User = require('../models/User');
 const CleanupLog = require('../models/CleanupLog');
 const logger = require('../utils/logger');
+const { minioClient, FILES_BUCKET } = require('../config/minio');
 
 let isRunning = false;
 
@@ -33,13 +33,16 @@ const runCleanup = async () => {
 
     for (const file of expiredFiles) {
       try {
-        // Delete physical file
+        // Delete object from MinIO. statObject first so we can still log
+        // whether it was actually present (removeObject itself is silent
+        // on a missing key, mirroring the old fs.existsSync check).
         let fsDeleted = false;
-        if (fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
+        try {
+          await minioClient.statObject(FILES_BUCKET, file.path);
+          await minioClient.removeObject(FILES_BUCKET, file.path);
           fsDeleted = true;
-        } else {
-          logger.warn(`File not found on disk: ${file.path}`);
+        } catch (statErr) {
+          logger.warn(`Object not found in MinIO: ${file.path}`);
         }
 
         // Update user storage usage
