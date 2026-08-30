@@ -58,6 +58,14 @@ const fileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Computed once at upload time by sniffing the file's bytes (see
+    // backend/utils/viewableFiles.js) — not derived from extension/mimetype
+    // alone, so unknown text formats (.env, .yml, any code file, etc.) are
+    // still detected correctly without needing a hardcoded extension list.
+    isViewable: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
