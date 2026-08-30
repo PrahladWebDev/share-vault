@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Video = require('../models/Video');
 const CleanupLog = require('../models/CleanupLog');
 const { generateShareToken } = require('../utils/tokenGenerator');
+const { detectIsViewable } = require('../utils/viewableFiles');
 const logger = require('../utils/logger');
 const { minioClient, FILES_BUCKET } = require('../config/minio');
 
@@ -30,6 +31,11 @@ const saveFileMetadata = async (fileData, userId, isAdmin) => {
 
   const shareToken = await generateUniqueShareToken();
 
+  // Sniff the file's actual bytes while the temp copy is still on disk, to
+  // decide if it can be safely rendered inline (View button) — generic
+  // text/binary detection, not a hardcoded extension list.
+  const isViewable = detectIsViewable(fileData.path, fileData.mimetype);
+
   // Stream the temp file multer wrote to disk straight into the MinIO
   // bucket, then remove the local temp copy — nothing permanent ever
   // touches the VPS's own disk.
@@ -48,6 +54,7 @@ const saveFileMetadata = async (fileData, userId, isAdmin) => {
     shareToken,
     expiresAt,
     isAdminFile: isAdmin,
+    isViewable,
     uploadedAt: new Date(),
   });
 
