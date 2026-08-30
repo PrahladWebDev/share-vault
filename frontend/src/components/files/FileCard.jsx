@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Download, Trash2, Share2, Clock, Copy, Check } from 'lucide-react';
+import { Download, Trash2, Share2, Clock, Copy, Check, Eye } from 'lucide-react';
 import { formatBytes, formatCountdown, formatRelativeTime, getMimeIcon, truncateFilename } from '../../utils/formatters';
+import { filesAPI } from '../../api/files';
 import toast from 'react-hot-toast';
 
 const FileCard = ({ file, onDelete, onShare, isAdmin = false }) => {
@@ -9,6 +10,7 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false }) => {
   const shareUrl = file.shareToken
     ? `${window.location.origin}/share/${file.shareToken}`
     : null;
+  const viewable = file.shareToken && file.itemType !== 'video' && file.isViewable;
 
   const handleCopyLink = () => {
     if (!shareUrl) return;
@@ -84,6 +86,17 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false }) => {
             <Share2 size={13} />
             Share
           </button>
+        )}
+        {viewable && (
+          <a
+            href={filesAPI.getViewUrl(file.shareToken)}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
+          >
+            <Eye size={13} />
+            View
+          </a>
         )}
         <button
           onClick={() => onDelete(file)}
