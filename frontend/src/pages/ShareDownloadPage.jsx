@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { filesAPI } from '../api/files';
 import { formatBytes, formatDateTime, getMimeIcon } from '../utils/formatters';
 import Spinner from '../components/ui/Spinner';
-import { Download, Vault, Clock, FileX } from 'lucide-react';
+import { Download, Vault, Clock, FileX, Eye } from 'lucide-react';
 
 const ShareDownloadPage = () => {
   const { token } = useParams();
@@ -37,6 +37,8 @@ const ShareDownloadPage = () => {
     document.body.removeChild(a);
     setTimeout(() => setIsDownloading(false), 2000);
   };
+
+  const viewUrl = `${process.env.REACT_APP_API_URL}/files/share/${token}?view=1`;
 
   if (isLoading) {
     return (
@@ -133,23 +135,36 @@ const ShareDownloadPage = () => {
               </div>
             )}
 
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="btn-primary w-full py-3 text-base"
-            >
-              {isDownloading ? (
-                <>
-                  <Spinner size="sm" />
-                  Starting download...
-                </>
-              ) : (
-                <>
-                  <Download size={18} />
-                  Download File
-                </>
+            <div className="flex gap-3">
+              {fileInfo?.isViewable && (
+                <a
+                  href={viewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-secondary flex-1 py-3 text-base"
+                >
+                  <Eye size={18} />
+                  View
+                </a>
               )}
-            </button>
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="btn-primary flex-1 py-3 text-base"
+              >
+                {isDownloading ? (
+                  <>
+                    <Spinner size="sm" />
+                    Starting download...
+                  </>
+                ) : (
+                  <>
+                    <Download size={18} />
+                    Download
+                  </>
+                )}
+              </button>
+            </div>
 
             <p className="text-xs text-gray-600 mt-4">
               No account needed · Safe to download
