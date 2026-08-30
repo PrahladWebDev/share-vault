@@ -4,6 +4,7 @@ const fileService = require('../services/fileService');
 const ApiResponse = require('../utils/apiResponse');
 const logger = require('../utils/logger');
 const { minioClient, FILES_BUCKET } = require('../config/minio');
+const { resolveInlineContentType } = require('../utils/viewableFiles');
 
 const uploadFile = async (req, res, next) => {
   try {
@@ -43,6 +44,7 @@ const uploadFile = async (req, res, next) => {
           shareUrl: file.shareToken
             ? `${process.env.FRONTEND_URL}/share/${file.shareToken}`
             : null,
+          isViewable: file.isViewable,
         },
       },
       'File uploaded successfully'
@@ -87,10 +89,22 @@ const downloadFile = async (req, res, next) => {
       userAgent: req.headers['user-agent'],
     });
 
+    // ?view=1 renders the file inline in the browser (used by the "View"
+    // button in the UI) instead of forcing a download. Only honored for
+    // file types recognized as safely viewable.
+    const wantsInline = ['1', 'true'].includes(String(req.query.view || '').toLowerCase());
+    const canViewInline = wantsInline && !!file.isViewable;
+
     const filename = encodeURIComponent(file.originalName);
+    const disposition = canViewInline
+      ? `inline; filename="${filename}"; filename*=UTF-8''${filename}`
+      : `attachment; filename="${filename}"; filename*=UTF-8''${filename}`;
+
     res.set({
-      'Content-Type': file.mimeType || 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${filename}`,
+      'Content-Type': canViewInline
+        ? resolveInlineContentType(file.mimeType, file.isViewable)
+        : file.mimeType || 'application/octet-stream',
+      'Content-Disposition': disposition,
       'Content-Length': file.size,
       'X-Content-Type-Options': 'nosniff',
     });
@@ -163,6 +177,7 @@ const getFileInfo = async (req, res, next) => {
         uploadedAt: file.uploadedAt,
         expiresAt: file.expiresAt,
         ownerName: file.owner?.name || 'Unknown',
+        isViewable: file.isViewable,
       },
       'File info fetched'
     );
