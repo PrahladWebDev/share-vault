@@ -13,6 +13,9 @@ export const filesAPI = {
       },
     }),
 
+  getShareUrl: (token) => `${window.location.origin}/share/${token}`,
+  getViewUrl: (token) => `${process.env.REACT_APP_API_URL}/files/share/${token}?view=1`,
+
   getMyFiles: (params) => api.get('/files/my-files', { params }),
   deleteFile: (id) => api.delete(`/files/${id}`),
   generateShareLink: (id) => api.post(`/files/${id}/share-link`),
