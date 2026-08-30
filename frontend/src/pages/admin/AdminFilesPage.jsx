@@ -6,7 +6,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Pagination from '../../components/ui/Pagination';
 import EmptyState from '../../components/ui/EmptyState';
 import { formatBytes, formatDate, getMimeIcon, truncateFilename, getErrorMessage } from '../../utils/formatters';
-import { HardDrive, Search, Trash2, Clock, Infinity } from 'lucide-react';
+import { filesAPI } from '../../api/files';
+import { HardDrive, Search, Trash2, Clock, Infinity, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const AdminFilesPage = () => {
@@ -127,12 +128,25 @@ const AdminFilesPage = () => {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => setDeleteTarget(file)}
-                        className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-colors"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {file.type !== 'video' && file.shareToken && file.isViewable && (
+                          <a
+                            href={filesAPI.getViewUrl(file.shareToken)}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="View"
+                            className="p-1.5 rounded-md text-gray-500 hover:text-white hover:bg-vault-muted transition-colors"
+                          >
+                            <Eye size={15} />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setDeleteTarget(file)}
+                          className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-colors"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
