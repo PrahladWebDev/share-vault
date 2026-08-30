@@ -232,6 +232,8 @@ const getAllFiles = async (req, res, next) => {
                 expiresAt: 1,
                 isAdminFile: 1,
                 type: 1,
+                shareToken: 1,
+                isViewable: 1,
                 'owner._id': 1,
                 'owner.name': 1,
                 'owner.email': 1,
