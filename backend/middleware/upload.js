@@ -47,13 +47,17 @@ const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
   if (BLOCKED_EXTENSIONS.includes(ext)) {
     logger.warn(`Blocked upload attempt: extension ${ext} by user ${req.user?._id}`);
-    return cb(new Error('File extension not allowed for security reasons'));
+    const err = new Error(`Files with a "${ext}" extension are not allowed for security reasons`);
+    err.statusCode = 400;
+    return cb(err);
   }
 
   // Path traversal prevention
   const sanitizedName = path.basename(file.originalname);
   if (sanitizedName !== file.originalname && file.originalname.includes('..')) {
-    return cb(new Error('Invalid filename'));
+    const err = new Error('Invalid filename');
+    err.statusCode = 400;
+    return cb(err);
   }
 
   cb(null, true);
