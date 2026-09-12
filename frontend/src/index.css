@@ -4,14 +4,122 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --scrollbar-track: #16162a;
-    --scrollbar-thumb: #4f46e5;
+  /* ---------------------------------------------------------------- */
+  /* Themes — each sets the same variable set, so the whole app       */
+  /* repaints from these alone. Default is "indigo" (the original).   */
+  /* ---------------------------------------------------------------- */
+  :root,
+  [data-theme='indigo'] {
+    --brand-50: 238 242 255;
+    --brand-100: 224 231 255;
+    --brand-200: 199 210 254;
+    --brand-300: 165 180 252;
+    --brand-400: 129 140 248;
+    --brand-500: 99 102 241;
+    --brand-600: 79 70 229;
+    --brand-700: 67 56 202;
+    --brand-800: 55 48 163;
+    --brand-900: 49 46 129;
+    --brand-950: 30 27 75;
+    --vault-dark: 15 15 26;
+    --vault-panel: 22 22 42;
+    --vault-border: 42 42 69;
+    --vault-muted: 61 61 96;
+  }
+
+  [data-theme='violet'] {
+    --brand-50: 245 243 255;
+    --brand-100: 237 233 254;
+    --brand-200: 221 214 254;
+    --brand-300: 196 181 253;
+    --brand-400: 167 139 250;
+    --brand-500: 139 92 246;
+    --brand-600: 124 58 237;
+    --brand-700: 109 40 217;
+    --brand-800: 91 33 182;
+    --brand-900: 76 29 149;
+    --brand-950: 46 16 101;
+    --vault-dark: 21 15 31;
+    --vault-panel: 30 22 48;
+    --vault-border: 53 42 77;
+    --vault-muted: 74 58 104;
+  }
+
+  [data-theme='emerald'] {
+    --brand-50: 236 253 245;
+    --brand-100: 209 250 229;
+    --brand-200: 167 243 208;
+    --brand-300: 110 231 183;
+    --brand-400: 52 211 153;
+    --brand-500: 16 185 129;
+    --brand-600: 5 150 105;
+    --brand-700: 4 120 87;
+    --brand-800: 6 95 70;
+    --brand-900: 6 78 59;
+    --brand-950: 2 44 34;
+    --vault-dark: 13 21 18;
+    --vault-panel: 20 32 25;
+    --vault-border: 32 50 40;
+    --vault-muted: 47 74 59;
+  }
+
+  [data-theme='ocean'] {
+    --brand-50: 236 254 255;
+    --brand-100: 207 250 254;
+    --brand-200: 165 243 252;
+    --brand-300: 103 232 249;
+    --brand-400: 34 211 238;
+    --brand-500: 6 182 212;
+    --brand-600: 8 145 178;
+    --brand-700: 14 116 144;
+    --brand-800: 21 94 117;
+    --brand-900: 22 78 99;
+    --brand-950: 8 51 68;
+    --vault-dark: 10 18 28;
+    --vault-panel: 16 28 43;
+    --vault-border: 28 50 71;
+    --vault-muted: 42 74 99;
+  }
+
+  [data-theme='sunset'] {
+    --brand-50: 255 247 237;
+    --brand-100: 255 237 213;
+    --brand-200: 254 215 170;
+    --brand-300: 253 186 116;
+    --brand-400: 251 146 60;
+    --brand-500: 249 115 22;
+    --brand-600: 234 88 12;
+    --brand-700: 194 65 12;
+    --brand-800: 154 52 18;
+    --brand-900: 124 45 18;
+    --brand-950: 67 20 7;
+    --vault-dark: 26 18 13;
+    --vault-panel: 36 26 19;
+    --vault-border: 61 43 31;
+    --vault-muted: 92 66 48;
+  }
+
+  [data-theme='rosegold'] {
+    --brand-50: 255 241 242;
+    --brand-100: 255 228 230;
+    --brand-200: 254 205 211;
+    --brand-300: 253 164 175;
+    --brand-400: 251 113 133;
+    --brand-500: 244 63 94;
+    --brand-600: 225 29 72;
+    --brand-700: 190 18 60;
+    --brand-800: 159 18 57;
+    --brand-900: 136 19 55;
+    --brand-950: 76 5 25;
+    --vault-dark: 18 13 15;
+    --vault-panel: 28 20 22;
+    --vault-border: 51 34 37;
+    --vault-muted: 77 52 56;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-color: rgb(var(--brand-600)) rgb(var(--vault-panel));
   }
 
   *::-webkit-scrollbar {
@@ -20,11 +128,11 @@
   }
 
   *::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
+    background: rgb(var(--vault-panel));
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: var(--scrollbar-thumb);
+    background-color: rgb(var(--brand-600));
     border-radius: 3px;
   }
 
@@ -33,7 +141,7 @@
   }
 
   body {
-    @apply bg-vault-dark text-gray-100 font-sans;
+    @apply bg-vault-dark text-gray-100 font-sans transition-colors duration-500;
   }
 }
 
@@ -55,7 +163,7 @@
   }
 
   .card {
-    @apply bg-vault-panel border border-vault-border rounded-xl p-5;
+    @apply bg-vault-panel border border-vault-border rounded-xl p-5 transition-colors duration-500;
   }
 
   .badge {
@@ -100,5 +208,20 @@
 
   .error-text {
     @apply text-red-400 text-xs mt-1;
+  }
+
+  /* Diagonal moving stripes overlaid on the upload progress bar */
+  .progress-stripes {
+    background-image: linear-gradient(
+      135deg,
+      rgb(255 255 255 / 0.25) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgb(255 255 255 / 0.25) 50%,
+      rgb(255 255 255 / 0.25) 75%,
+      transparent 75%,
+      transparent
+    );
+    background-size: 28px 28px;
   }
 }

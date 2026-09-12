@@ -5,7 +5,8 @@ import { authAPI } from '../../api/auth';
 import { getErrorMessage } from '../../utils/formatters';
 import Spinner from '../../components/ui/Spinner';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, User, Lock, Shield } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, Shield, Palette } from 'lucide-react';
+import ThemeSwitcher from '../../components/ui/ThemeSwitcher';
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -79,6 +80,16 @@ const SettingsPage = () => {
           </div>
         </div>
         <p className="text-xs text-gray-600 mt-3">Profile editing coming soon.</p>
+      </div>
+
+      {/* Appearance */}
+      <div className="card mb-6">
+        <div className="flex items-center gap-3 mb-5">
+          <Palette className="h-4 w-4 text-brand-400" />
+          <h2 className="section-title mb-0">Appearance</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-4">Pick a theme — it applies across the whole app instantly.</p>
+        <ThemeSwitcher variant="full" />
       </div>
 
       {/* Change password */}

@@ -7,7 +7,7 @@ const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-vault-dark overflow-hidden">
+    <div className="flex h-screen bg-vault-dark overflow-hidden transition-colors duration-500">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex w-64 flex-shrink-0">
         <div className="w-full">

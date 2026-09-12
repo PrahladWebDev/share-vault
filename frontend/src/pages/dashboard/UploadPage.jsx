@@ -190,14 +190,14 @@ const UploadPage = () => {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => !isUploading && fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-2xl p-8 transition-all text-center ${
+        className={`relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 text-center ${
           isUploading ? 'cursor-default opacity-70' : 'cursor-pointer'
         } ${
           isDragging
-            ? 'border-brand-500 bg-brand-900/20'
+            ? 'border-brand-500 bg-brand-900/20 scale-[1.02] animate-drop-glow'
             : limitReached
             ? 'border-vault-border opacity-50 cursor-not-allowed'
-            : 'border-vault-border hover:border-brand-600/50 hover:bg-brand-900/10'
+            : 'border-vault-border hover:border-brand-600/50 hover:bg-brand-900/10 hover:scale-[1.01]'
         }`}
       >
         <input
@@ -210,8 +210,14 @@ const UploadPage = () => {
         />
 
         <div className="flex flex-col items-center">
-          <div className="p-4 bg-vault-muted rounded-full mb-4 border border-vault-border">
-            <CloudUpload className="h-10 w-10 text-gray-500" />
+          <div
+            className={`p-4 rounded-full mb-4 border transition-all duration-300 ${
+              isDragging
+                ? 'bg-brand-600/20 border-brand-500/50 animate-float'
+                : 'bg-vault-muted border-vault-border'
+            }`}
+          >
+            <CloudUpload className={`h-10 w-10 transition-colors duration-300 ${isDragging ? 'text-brand-400' : 'text-gray-500'}`} />
           </div>
           <p className="text-base font-medium text-white mb-1">
             {isDragging ? 'Drop to add' : 'Drop files here'}
@@ -238,11 +244,11 @@ const UploadPage = () => {
           </div>
 
           {queue.map((item) => (
-            <div key={item.id} className="card py-3 px-4">
+            <div key={item.id} className="card py-3 px-4 animate-slide-up">
               <div className="flex items-center gap-3">
                 <div className="text-xl flex-shrink-0">
                   {item.status === 'done' ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400 animate-pop-in" />
                   ) : item.status === 'error' ? (
                     <XCircle className="h-5 w-5 text-red-400" />
                   ) : item.status === 'skipped' ? (
@@ -263,11 +269,13 @@ const UploadPage = () => {
                     {item.status === 'done' && ' · Uploaded'}
                   </p>
                   {item.status === 'uploading' && (
-                    <div className="w-full bg-vault-muted rounded-full h-1.5 mt-2">
+                    <div className="w-full bg-vault-muted rounded-full h-1.5 mt-2 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-brand-600 to-brand-400 h-1.5 rounded-full transition-all duration-300"
+                        className="relative bg-gradient-to-r from-brand-600 to-brand-400 h-1.5 rounded-full transition-all duration-300 overflow-hidden"
                         style={{ width: `${item.progress}%` }}
-                      />
+                      >
+                        <div className="absolute inset-0 progress-stripes animate-progress-stripes" />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -284,7 +292,7 @@ const UploadPage = () => {
 
               {/* Per-file result: share link + view */}
               {item.status === 'done' && item.result?.shareUrl && (
-                <div className="mt-3 pt-3 border-t border-vault-border flex items-center gap-2">
+                <div className="mt-3 pt-3 border-t border-vault-border flex items-center gap-2 animate-fade-in">
                   <input
                     type="text"
                     readOnly
@@ -338,10 +346,10 @@ const UploadPage = () => {
 
       {/* All uploads complete — share-all summary */}
       {batchDone && completed.length > 0 && (
-        <div className="mt-6 p-5 bg-emerald-900/20 border border-emerald-800/40 rounded-xl">
+        <div className="mt-6 p-5 bg-emerald-900/20 border border-emerald-800/40 rounded-xl animate-slide-up">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              <FileCheck className="h-6 w-6 text-emerald-400 flex-shrink-0" />
+              <FileCheck className="h-6 w-6 text-emerald-400 flex-shrink-0 animate-pop-in" />
               <div>
                 <p className="text-sm font-semibold text-emerald-300">
                   {completed.length} file{completed.length !== 1 ? 's' : ''} uploaded successfully

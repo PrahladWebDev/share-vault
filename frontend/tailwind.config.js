@@ -5,24 +5,26 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Both brand + vault are now driven by CSS variables (see index.css)
+        // so every theme can repaint the whole app without touching components.
         brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50: 'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
+          300: 'rgb(var(--brand-300) / <alpha-value>)',
+          400: 'rgb(var(--brand-400) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
+          900: 'rgb(var(--brand-900) / <alpha-value>)',
+          950: 'rgb(var(--brand-950) / <alpha-value>)',
         },
         vault: {
-          dark: '#0f0f1a',
-          panel: '#16162a',
-          border: '#2a2a45',
-          muted: '#3d3d60',
+          dark: 'rgb(var(--vault-dark) / <alpha-value>)',
+          panel: 'rgb(var(--vault-panel) / <alpha-value>)',
+          border: 'rgb(var(--vault-border) / <alpha-value>)',
+          muted: 'rgb(var(--vault-muted) / <alpha-value>)',
         },
       },
       fontFamily: {
@@ -34,6 +36,10 @@ module.exports = {
         'slide-up': 'slideUp 0.3s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         shimmer: 'shimmer 1.5s infinite',
+        'pop-in': 'popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'drop-glow': 'dropGlow 1.6s ease-in-out infinite',
+        float: 'float 2.2s ease-in-out infinite',
+        'progress-stripes': 'progressStripes 1s linear infinite',
       },
       keyframes: {
         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -41,6 +47,23 @@ module.exports = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        popIn: {
+          '0%': { transform: 'scale(0.5)', opacity: '0' },
+          '60%': { transform: 'scale(1.12)', opacity: '1' },
+          '100%': { transform: 'scale(1)' },
+        },
+        dropGlow: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgb(var(--brand-500) / 0.35)' },
+          '50%': { boxShadow: '0 0 0 14px rgb(var(--brand-500) / 0)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        progressStripes: {
+          '0%': { backgroundPosition: '0 0' },
+          '100%': { backgroundPosition: '28px 0' },
         },
       },
     },

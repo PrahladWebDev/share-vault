@@ -5,6 +5,7 @@ import {
   Shield, Users, HardDrive, ScrollText, ChevronRight, Vault, Film
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ThemeSwitcher from '../ui/ThemeSwitcher';
 
 const NavItem = ({ to, icon: Icon, label }) => (
   <NavLink
@@ -49,7 +50,7 @@ const Sidebar = ({ onClose }) => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-vault-panel border-r border-vault-border">
+    <div className="flex flex-col h-full bg-vault-panel border-r border-vault-border transition-colors duration-500">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-vault-border">
         <div className="flex items-center gap-2.5">
@@ -97,8 +98,9 @@ const Sidebar = ({ onClose }) => {
         )}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-vault-border">
+      {/* Theme + Logout */}
+      <div className="px-3 py-4 border-t border-vault-border space-y-1">
+        <ThemeSwitcher variant="compact" />
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-900/20 transition-colors"

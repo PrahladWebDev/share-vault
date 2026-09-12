@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 
@@ -42,6 +43,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -117,22 +119,23 @@ function App() {
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#16162a',
+                background: 'rgb(var(--vault-panel))',
                 color: '#e5e7eb',
-                border: '1px solid #2a2a45',
+                border: '1px solid rgb(var(--vault-border))',
                 borderRadius: '10px',
                 fontSize: '14px',
               },
               success: {
-                iconTheme: { primary: '#34d399', secondary: '#16162a' },
+                iconTheme: { primary: '#34d399', secondary: 'rgb(var(--vault-panel))' },
               },
               error: {
-                iconTheme: { primary: '#f87171', secondary: '#16162a' },
+                iconTheme: { primary: '#f87171', secondary: 'rgb(var(--vault-panel))' },
               },
             }}
           />
         </AuthProvider>
       </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
