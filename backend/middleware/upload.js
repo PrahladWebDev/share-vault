@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { generateStoredFilename } = require('../utils/tokenGenerator');
+const { scanFile, isScanEnabled, isFailOpen } = require('../services/virusScanService');
 const logger = require('../utils/logger');
 
 // Files land here only briefly, in between multer parsing the multipart
@@ -14,18 +15,6 @@ if (!fs.existsSync(TMP_DIR)) {
   fs.mkdirSync(TMP_DIR, { recursive: true });
 }
 
-// Blocked MIME types for security
-const BLOCKED_MIME_TYPES = [
-  'application/x-executable',
-  'application/x-sh',
-  'application/x-bat',
-  'application/x-msdownload',
-  'text/x-shellscript',
-];
-
-// Blocked extensions
-const BLOCKED_EXTENSIONS = ['.exe', '.sh', '.bat', '.cmd', '.com', '.vbs', '.js', '.php', '.py', '.rb', '.pl'];
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, TMP_DIR);
@@ -36,22 +25,9 @@ const storage = multer.diskStorage({
   },
 });
 
+// All file types (.js, .exe, etc.) are accepted — safety comes from the
+// virus scan below instead of an extension/MIME blocklist.
 const fileFilter = (req, file, cb) => {
-  // Check blocked MIME types
-  if (BLOCKED_MIME_TYPES.includes(file.mimetype)) {
-    logger.warn(`Blocked upload attempt: MIME type ${file.mimetype} by user ${req.user?._id}`);
-    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'File type not allowed'));
-  }
-
-  // Check blocked extensions
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (BLOCKED_EXTENSIONS.includes(ext)) {
-    logger.warn(`Blocked upload attempt: extension ${ext} by user ${req.user?._id}`);
-    const err = new Error(`Files with a "${ext}" extension are not allowed for security reasons`);
-    err.statusCode = 400;
-    return cb(err);
-  }
-
   // Path traversal prevention
   const sanitizedName = path.basename(file.originalname);
   if (sanitizedName !== file.originalname && file.originalname.includes('..')) {
@@ -61,6 +37,55 @@ const fileFilter = (req, file, cb) => {
   }
 
   cb(null, true);
+};
+
+const removeTempFile = (filePath) => {
+  fs.unlink(filePath, (err) => {
+    if (err && err.code !== 'ENOENT') {
+      logger.error(`Failed to remove temp upload ${filePath}:`, err);
+    }
+  });
+};
+
+// Runs after multer has written the file to TMP_DIR and before the
+// controller pushes it to MinIO. Infected files never leave the temp dir.
+const scanUploadedFile = async (req, res, next) => {
+  if (!req.file || !isScanEnabled()) return next();
+
+  const { path: tmpPath, originalname } = req.file;
+
+  try {
+    const result = await scanFile(tmpPath);
+
+    if (!result.clean) {
+      logger.warn(
+        `Infected upload blocked: "${originalname}" (${result.signature}) by user ${req.user?._id}, ip ${req.ip}`
+      );
+      removeTempFile(tmpPath);
+      const err = new Error(`Upload rejected: "${originalname}" contains malware (${result.signature})`);
+      err.statusCode = 422;
+      return next(err);
+    }
+
+    return next();
+  } catch (scanErr) {
+    logger.error(`Virus scan failed for "${originalname}" (${scanErr.code || 'ERR'}): ${scanErr.message}`);
+
+    if (isFailOpen()) {
+      logger.warn(`VIRUS_SCAN_FAIL_OPEN=true — allowing unscanned upload "${originalname}"`);
+      return next();
+    }
+
+    removeTempFile(tmpPath);
+    const tooBig = scanErr.code === 'SCAN_SIZE_LIMIT';
+    const err = new Error(
+      tooBig
+        ? 'This file is too large for the virus scanner'
+        : 'Virus scanner is temporarily unavailable. Please try again later.'
+    );
+    err.statusCode = tooBig ? 413 : 503;
+    return next(err);
+  }
 };
 
 const createUploadMiddleware = (req, res, next) => {
@@ -79,7 +104,7 @@ const createUploadMiddleware = (req, res, next) => {
     if (err) {
       return next(err);
     }
-    next();
+    scanUploadedFile(req, res, next);
   });
 };
 
