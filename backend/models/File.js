@@ -66,6 +66,19 @@ const fileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // 'processing' = accepted, still being scanned/pushed to MinIO in the
+    // background. 'ready' = safe and available for download/share.
+    // 'rejected' = failed the virus scan. 'failed' = scan/storage error.
+    status: {
+      type: String,
+      enum: ['processing', 'ready', 'rejected', 'failed'],
+      default: 'processing',
+      index: true,
+    },
+    statusMessage: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

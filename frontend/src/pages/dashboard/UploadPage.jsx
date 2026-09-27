@@ -23,7 +23,36 @@ import { useAuth } from '../../context/AuthContext';
 
 const MAX_USER_SIZE = 500 * 1024 * 1024; // 500 MB
 
-// Per-item statuses: 'pending' | 'uploading' | 'done' | 'error' | 'skipped'
+// Per-item statuses: 'pending' | 'uploading' | 'processing' | 'done' | 'error' | 'skipped'
+// 'uploading' = bytes still going to the server (real progress %).
+// 'processing' = server has the file and is scanning it / pushing to MinIO;
+//   we poll GET /files/:id/status until this resolves to 'done' or 'error'.
+const POLL_INTERVAL_MS = 1200;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000; // give up after 10 min
+
+const pollUntilReady = (fileId, onUpdate) =>
+  new Promise((resolve) => {
+    const startedAt = Date.now();
+    const tick = async () => {
+      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+        return resolve({ ok: false, message: 'Timed out waiting for processing to finish' });
+      }
+      try {
+        const res = await filesAPI.getUploadStatus(fileId);
+        const s = res.data.data;
+        if (s.status === 'ready') return resolve({ ok: true, status: s });
+        if (s.status === 'rejected' || s.status === 'failed') {
+          return resolve({ ok: false, message: s.statusMessage || 'Upload could not be processed' });
+        }
+        onUpdate?.(s);
+        setTimeout(tick, POLL_INTERVAL_MS);
+      } catch (err) {
+        return resolve({ ok: false, message: getErrorMessage(err) });
+      }
+    };
+    tick();
+  });
+
 let nextId = 0;
 const makeQueueItem = (file) => ({
   id: `${Date.now()}-${nextId++}`,
@@ -116,12 +145,33 @@ const UploadPage = () => {
         const formData = new FormData();
         formData.append('file', item.file);
 
+        // This now resolves as soon as the server finishes receiving the
+        // bytes (multer writes the temp file) — it no longer waits for
+        // virus scanning or the MinIO push, so it won't stall on big files.
         const res = await filesAPI.upload(formData, (pct) =>
           updateItem(item.id, { progress: pct })
         );
-        const uploaded = res.data.data.file;
+        const accepted = res.data.data.file;
 
-        updateItem(item.id, { status: 'done', progress: 100, result: uploaded });
+        updateItem(item.id, { status: 'processing', progress: 100, result: accepted });
+
+        const outcome = await pollUntilReady(accepted.id, () => {
+          // Still processing — nothing new to show yet, the "Scanning &
+          // storing…" label already covers it.
+        });
+
+        if (outcome.ok) {
+          updateItem(item.id, {
+            status: 'done',
+            result: {
+              ...accepted,
+              isViewable: outcome.status.isViewable,
+              shareUrl: outcome.status.shareUrl,
+            },
+          });
+        } else {
+          updateItem(item.id, { status: 'error', error: outcome.message });
+        }
       } catch (err) {
         if (err?.response?.status === 429) {
           limitReachedMidBatch = true;
@@ -253,7 +303,7 @@ const UploadPage = () => {
                     <XCircle className="h-5 w-5 text-red-400" />
                   ) : item.status === 'skipped' ? (
                     <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                  ) : item.status === 'uploading' ? (
+                  ) : item.status === 'uploading' || item.status === 'processing' ? (
                     <Loader2 className="h-5 w-5 text-brand-400 animate-spin" />
                   ) : (
                     getMimeIcon(item.file.type)
@@ -264,6 +314,7 @@ const UploadPage = () => {
                   <p className="text-xs text-gray-500">
                     {formatBytes(item.file.size)}
                     {item.status === 'uploading' && ` · Uploading ${item.progress}%`}
+                    {item.status === 'processing' && ' · Scanning & storing…'}
                     {item.status === 'error' && ` · ${item.error}`}
                     {item.status === 'skipped' && ` · ${item.error}`}
                     {item.status === 'done' && ' · Uploaded'}
@@ -276,6 +327,11 @@ const UploadPage = () => {
                       >
                         <div className="absolute inset-0 progress-stripes animate-progress-stripes" />
                       </div>
+                    </div>
+                  )}
+                  {item.status === 'processing' && (
+                    <div className="w-full bg-vault-muted rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div className="bg-gradient-to-r from-brand-600 to-brand-400 h-1.5 rounded-full w-full animate-pulse" />
                     </div>
                   )}
                 </div>

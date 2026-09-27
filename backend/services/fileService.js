@@ -8,6 +8,15 @@ const { generateShareToken } = require('../utils/tokenGenerator');
 const { detectIsViewable } = require('../utils/viewableFiles');
 const logger = require('../utils/logger');
 const { minioClient, FILES_BUCKET } = require('../config/minio');
+const { scanFile, isScanEnabled, isFailOpen } = require('./virusScanService');
+
+const removeTempFile = (filePath) => {
+  fs.unlink(filePath, (err) => {
+    if (err && err.code !== 'ENOENT') {
+      logger.error(`Failed to remove temp upload ${filePath}:`, err);
+    }
+  });
+};
 
 const DAILY_UPLOAD_LIMIT = 2;
 const ROLLING_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -26,44 +35,94 @@ const checkUserUploadLimit = async (userId) => {
   };
 };
 
-const saveFileMetadata = async (fileData, userId, isAdmin) => {
+// FAST PATH — runs inside the upload request. Only touches local disk
+// (already written by multer), so it returns in milliseconds regardless of
+// file size. Scanning and the MinIO push happen afterwards, off-request,
+// in processUploadedFile().
+const acceptUploadedFile = async (fileData, userId, isAdmin) => {
   const expiresAt = isAdmin ? null : new Date(Date.now() + ROLLING_WINDOW_MS);
-
   const shareToken = await generateUniqueShareToken();
-
-  // Sniff the file's actual bytes while the temp copy is still on disk, to
-  // decide if it can be safely rendered inline (View button) — generic
-  // text/binary detection, not a hardcoded extension list.
-  const isViewable = detectIsViewable(fileData.path, fileData.mimetype);
-
-  // Stream the temp file multer wrote to disk straight into the MinIO
-  // bucket, then remove the local temp copy — nothing permanent ever
-  // touches the VPS's own disk.
-  await minioClient.fPutObject(FILES_BUCKET, fileData.filename, fileData.path, {
-    'Content-Type': fileData.mimetype,
-  });
-  fs.unlinkSync(fileData.path);
 
   const file = await File.create({
     owner: userId,
     originalName: fileData.originalname,
     storedName: fileData.filename,
-    path: fileData.filename, // MinIO object key within FILES_BUCKET
+    path: fileData.filename, // MinIO object key within FILES_BUCKET (written once processing succeeds)
     mimeType: fileData.mimetype,
     size: fileData.size,
     shareToken,
     expiresAt,
     isAdminFile: isAdmin,
-    isViewable,
+    isViewable: false, // finalized in processUploadedFile once the file is confirmed clean
+    status: 'processing',
     uploadedAt: new Date(),
   });
 
-  // Update user storage usage
-  await User.findByIdAndUpdate(userId, {
-    $inc: { usedStorage: fileData.size },
-  });
+  logger.info(`File accepted, queued for scan+storage: ${fileData.filename} by user ${userId}, size: ${fileData.size}`);
+  return file;
+};
 
-  logger.info(`File uploaded to MinIO: ${fileData.filename} by user ${userId}, size: ${fileData.size}`);
+// SLOW PATH — runs in the background after the HTTP response has already
+// been sent. Scans the temp file, then (if clean) pushes it to MinIO and
+// flips the File doc to 'ready'. Never let a rejection/error here throw
+// unhandled — always resolve the File doc to a terminal status.
+const processUploadedFile = async (fileId, fileData, userId) => {
+  const { path: tmpPath, mimetype, originalname } = fileData;
+
+  try {
+    if (isScanEnabled()) {
+      try {
+        const result = await scanFile(tmpPath);
+        if (!result.clean) {
+          logger.warn(`Infected upload rejected post-accept: "${originalname}" (${result.signature}) user ${userId}`);
+          removeTempFile(tmpPath);
+          await File.findByIdAndUpdate(fileId, {
+            status: 'rejected',
+            statusMessage: `Contains malware (${result.signature})`,
+          });
+          return;
+        }
+      } catch (scanErr) {
+        if (!isFailOpen()) {
+          logger.error(`Scan failed for "${originalname}", rejecting (fail-closed): ${scanErr.message}`);
+          removeTempFile(tmpPath);
+          await File.findByIdAndUpdate(fileId, {
+            status: 'failed',
+            statusMessage: 'Virus scan failed — please re-upload',
+          });
+          return;
+        }
+        logger.warn(`Scan failed for "${originalname}", VIRUS_SCAN_FAIL_OPEN=true — continuing unscanned`);
+      }
+    }
+
+    const isViewable = detectIsViewable(tmpPath, mimetype);
+
+    await minioClient.fPutObject(FILES_BUCKET, fileData.filename, tmpPath, {
+      'Content-Type': mimetype,
+    });
+    removeTempFile(tmpPath);
+
+    await File.findByIdAndUpdate(fileId, { status: 'ready', isViewable });
+    await User.findByIdAndUpdate(userId, { $inc: { usedStorage: fileData.size } });
+
+    logger.info(`File ready in MinIO: ${fileData.filename} (user ${userId})`);
+  } catch (err) {
+    logger.error(`Background processing failed for "${originalname}":`, err);
+    removeTempFile(tmpPath);
+    await File.findByIdAndUpdate(fileId, {
+      status: 'failed',
+      statusMessage: 'Storage error — please re-upload',
+    }).catch(() => {});
+  }
+};
+
+const getFileStatus = async (fileId, userId, isAdmin) => {
+  const query = isAdmin ? { _id: fileId } : { _id: fileId, owner: userId };
+  const file = await File.findOne(query);
+  if (!file) {
+    throw Object.assign(new Error('File not found'), { statusCode: 404 });
+  }
   return file;
 };
 
@@ -113,7 +172,7 @@ const getUserFiles = async (userId, page = 1, limit = 10, search = '') => {
 };
 
 const getFileByToken = async (shareToken) => {
-  const file = await File.findOne({ shareToken, isExpired: false }).populate(
+  const file = await File.findOne({ shareToken, isExpired: false, status: 'ready' }).populate(
     'owner',
     'name email'
   );
@@ -261,7 +320,9 @@ const getUserDashboardData = async (userId) => {
 
 module.exports = {
   checkUserUploadLimit,
-  saveFileMetadata,
+  acceptUploadedFile,
+  processUploadedFile,
+  getFileStatus,
   getUserFiles,
   getFileByToken,
   incrementDownloadCount,

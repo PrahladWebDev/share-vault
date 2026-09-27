@@ -3,12 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { generateStoredFilename } = require('../utils/tokenGenerator');
-const { scanFile, isScanEnabled, isFailOpen } = require('../services/virusScanService');
 const logger = require('../utils/logger');
 
-// Files land here only briefly, in between multer parsing the multipart
-// request and the service layer streaming them into MinIO — then they're
-// deleted. This is NOT where files are permanently stored anymore.
+// Files land here after multer parses the multipart request. The request
+// handler responds as soon as this is done — virus scanning and the MinIO
+// push happen afterwards, in the background (see fileService.processUploadedFile),
+// so a slow scan/storage push never blocks the HTTP response. Temp files are
+// removed by that background step once it finishes (clean, rejected, or failed).
 const TMP_DIR = process.env.TMP_UPLOAD_DIR || path.join(os.tmpdir(), 'sharevault-uploads');
 
 if (!fs.existsSync(TMP_DIR)) {
@@ -39,55 +40,6 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-const removeTempFile = (filePath) => {
-  fs.unlink(filePath, (err) => {
-    if (err && err.code !== 'ENOENT') {
-      logger.error(`Failed to remove temp upload ${filePath}:`, err);
-    }
-  });
-};
-
-// Runs after multer has written the file to TMP_DIR and before the
-// controller pushes it to MinIO. Infected files never leave the temp dir.
-const scanUploadedFile = async (req, res, next) => {
-  if (!req.file || !isScanEnabled()) return next();
-
-  const { path: tmpPath, originalname } = req.file;
-
-  try {
-    const result = await scanFile(tmpPath);
-
-    if (!result.clean) {
-      logger.warn(
-        `Infected upload blocked: "${originalname}" (${result.signature}) by user ${req.user?._id}, ip ${req.ip}`
-      );
-      removeTempFile(tmpPath);
-      const err = new Error(`Upload rejected: "${originalname}" contains malware (${result.signature})`);
-      err.statusCode = 422;
-      return next(err);
-    }
-
-    return next();
-  } catch (scanErr) {
-    logger.error(`Virus scan failed for "${originalname}" (${scanErr.code || 'ERR'}): ${scanErr.message}`);
-
-    if (isFailOpen()) {
-      logger.warn(`VIRUS_SCAN_FAIL_OPEN=true — allowing unscanned upload "${originalname}"`);
-      return next();
-    }
-
-    removeTempFile(tmpPath);
-    const tooBig = scanErr.code === 'SCAN_SIZE_LIMIT';
-    const err = new Error(
-      tooBig
-        ? 'This file is too large for the virus scanner'
-        : 'Virus scanner is temporarily unavailable. Please try again later.'
-    );
-    err.statusCode = tooBig ? 413 : 503;
-    return next(err);
-  }
-};
-
 const createUploadMiddleware = (req, res, next) => {
   const isAdmin = req.user?.role === 'admin';
   const maxSize = isAdmin
@@ -101,10 +53,8 @@ const createUploadMiddleware = (req, res, next) => {
   }).single('file');
 
   upload(req, res, (err) => {
-    if (err) {
-      return next(err);
-    }
-    scanUploadedFile(req, res, next);
+    if (err) return next(err);
+    next();
   });
 };
 

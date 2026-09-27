@@ -13,6 +13,8 @@ export const filesAPI = {
       },
     }),
 
+  getUploadStatus: (id) => api.get(`/files/${id}/status`),
+
   getShareUrl: (token) => `${window.location.origin}/share/${token}`,
   getViewUrl: (token) => `${process.env.REACT_APP_API_URL}/files/share/${token}?view=1`,
 

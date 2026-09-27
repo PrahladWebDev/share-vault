@@ -28,27 +28,33 @@ const uploadFile = async (req, res, next) => {
       }
     }
 
-    const file = await fileService.saveFileMetadata(req.file, req.user._id, isAdmin);
+    // Fast path only: writes a DB record, no scanning/MinIO here, so this
+    // resolves immediately regardless of file size.
+    const file = await fileService.acceptUploadedFile(req.file, req.user._id, isAdmin);
 
-    return ApiResponse.created(
-      res,
-      {
-        file: {
-          id: file._id,
-          originalName: file.originalName,
-          size: file.size,
-          mimeType: file.mimeType,
-          shareToken: file.shareToken,
-          expiresAt: file.expiresAt,
-          uploadedAt: file.uploadedAt,
-          shareUrl: file.shareToken
-            ? `${process.env.FRONTEND_URL}/share/${file.shareToken}`
-            : null,
-          isViewable: file.isViewable,
-        },
+    // Respond right away — the client polls GET /files/:id/status for
+    // when scanning + storage actually finish.
+    const responseBody = {
+      file: {
+        id: file._id,
+        originalName: file.originalName,
+        size: file.size,
+        mimeType: file.mimeType,
+        shareToken: file.shareToken,
+        expiresAt: file.expiresAt,
+        uploadedAt: file.uploadedAt,
+        shareUrl: file.shareToken
+          ? `${process.env.FRONTEND_URL}/share/${file.shareToken}`
+          : null,
+        isViewable: file.isViewable,
+        status: file.status,
       },
-      'File uploaded successfully'
-    );
+    };
+    ApiResponse.created(res, responseBody, 'File accepted, processing');
+
+    // Slow path: scan + push to MinIO, off-request. Errors are handled
+    // internally by processUploadedFile (never throws here).
+    fileService.processUploadedFile(file._id, req.file, req.user._id);
   } catch (err) {
     // Clean up uploaded file on error
     if (req.file && fs.existsSync(req.file.path)) {
@@ -58,6 +64,26 @@ const uploadFile = async (req, res, next) => {
         logger.error('Failed to cleanup file after upload error:', unlinkErr);
       }
     }
+    next(err);
+  }
+};
+
+const getUploadStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const isAdmin = req.user.role === 'admin';
+    const file = await fileService.getFileStatus(id, req.user._id, isAdmin);
+
+    return ApiResponse.success(res, {
+      id: file._id,
+      status: file.status,
+      statusMessage: file.statusMessage,
+      isViewable: file.isViewable,
+      shareUrl: file.shareToken
+        ? `${process.env.FRONTEND_URL}/share/${file.shareToken}`
+        : null,
+    });
+  } catch (err) {
     next(err);
   }
 };
@@ -206,6 +232,7 @@ const checkUploadLimit = async (req, res, next) => {
 
 module.exports = {
   uploadFile,
+  getUploadStatus,
   downloadFile,
   deleteFile,
   getMyFiles,

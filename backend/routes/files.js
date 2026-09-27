@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   uploadFile,
+  getUploadStatus,
   downloadFile,
   deleteFile,
   getMyFiles,
@@ -22,6 +23,7 @@ router.get('/share/:token', downloadLimiter, downloadFile);
 router.use(authenticate);
 
 router.post('/upload', uploadLimiter, createUploadMiddleware, uploadFile);
+router.get('/:id/status', getUploadStatus);
 router.get('/my-files', getMyFiles);
 router.delete('/:id', deleteFile);
 router.post('/:id/share-link', generateShareLink);
