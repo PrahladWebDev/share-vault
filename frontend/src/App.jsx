@@ -18,6 +18,7 @@ import DashboardPage from './pages/dashboard/DashboardPage';
 import UploadPage from './pages/dashboard/UploadPage';
 import MyFilesPage from './pages/dashboard/MyFilesPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
+import ZipConverterPage from './pages/dashboard/ZipConverterPage';
 
 // Admin pages
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -66,6 +67,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/files" element={<MyFilesPage />} />
+              <Route path="/zip-converter" element={<ZipConverterPage />} />
               <Route path="/settings" element={<SettingsPage />} />
 
               {/* Admin routes */}

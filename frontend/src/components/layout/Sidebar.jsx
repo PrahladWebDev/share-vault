@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Upload, Files, Settings, LogOut,
-  Shield, Users, HardDrive, ScrollText, ChevronRight, Vault, Film
+  Shield, Users, HardDrive, ScrollText, ChevronRight, Vault, Film, FileArchive
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeSwitcher from '../ui/ThemeSwitcher';
@@ -38,6 +38,7 @@ const Sidebar = ({ onClose }) => {
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/upload', icon: Upload, label: 'Upload File' },
     { to: '/files', icon: Files, label: 'My Files' },
+    { to: '/zip-converter', icon: FileArchive, label: 'ZIP Converter' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 
