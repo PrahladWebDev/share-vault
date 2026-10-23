@@ -9,6 +9,7 @@ const { detectIsViewable } = require('../utils/viewableFiles');
 const logger = require('../utils/logger');
 const { minioClient, FILES_BUCKET } = require('../config/minio');
 const { scanFile, isScanEnabled, isFailOpen } = require('./virusScanService');
+const { releaseUserStorage } = require('../utils/storageUsage');
 
 const removeTempFile = (filePath) => {
   fs.unlink(filePath, (err) => {
@@ -103,7 +104,14 @@ const processUploadedFile = async (fileId, fileData, userId) => {
     });
     removeTempFile(tmpPath);
 
-    await File.findByIdAndUpdate(fileId, { status: 'ready', isViewable });
+    const updated = await File.findByIdAndUpdate(fileId, { status: 'ready', isViewable });
+    if (!updated) {
+      // The file was deleted while it was still being scanned/stored — don't
+      // count it against the user's storage and don't leave an orphan in MinIO.
+      await minioClient.removeObject(FILES_BUCKET, fileData.filename).catch(() => {});
+      logger.warn(`File ${fileId} was deleted during processing; discarded ${fileData.filename}`);
+      return;
+    }
     await User.findByIdAndUpdate(userId, { $inc: { usedStorage: fileData.size } });
 
     logger.info(`File ready in MinIO: ${fileData.filename} (user ${userId})`);
@@ -218,10 +226,11 @@ const performFileDeletion = async (file, reason) => {
     fsStatus = 'partial';
   }
 
-  // Update user storage
-  await User.findByIdAndUpdate(file.owner, {
-    $inc: { usedStorage: -Math.abs(file.size) },
-  });
+  // Update user storage — only files that were counted (status 'ready').
+  // Failed / rejected / still-processing files never added to usedStorage.
+  if (file.status === 'ready') {
+    await releaseUserStorage(file.owner, file.size);
+  }
 
   // Create cleanup log
   await CleanupLog.create({
@@ -304,7 +313,7 @@ const getUserDashboardData = async (userId) => {
   const isAdmin = user.role === 'admin';
 
   return {
-    storageUsed: user.usedStorage + videoStorageUsed,
+    storageUsed: Math.max(0, user.usedStorage || 0) + videoStorageUsed,
     totalFiles: totalFiles + totalVideos,
     totalVideos,
     videoStorageUsed,

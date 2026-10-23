@@ -27,26 +27,39 @@ const MAX_USER_SIZE = 500 * 1024 * 1024; // 500 MB
 // 'uploading' = bytes still going to the server (real progress %).
 // 'processing' = server has the file and is scanning it / pushing to MinIO;
 //   we poll GET /files/:id/status until this resolves to 'done' or 'error'.
-const POLL_INTERVAL_MS = 1200;
-const POLL_TIMEOUT_MS = 10 * 60 * 1000; // give up after 10 min
+// Polling backs off over time so a long scan (big files can take many minutes)
+// doesn't hammer the API: ~1.5s at first, then 3s, then 5s.
+const pollDelay = (elapsedMs) => (elapsedMs < 20000 ? 1500 : elapsedMs < 120000 ? 3000 : 5000);
+const POLL_TIMEOUT_MS = 45 * 60 * 1000; // give up after 45 min (large files scan slowly)
+const MAX_TRANSIENT_POLL_FAILURES = 12; // consecutive 429 / network / gateway errors tolerated
 
 const pollUntilReady = (fileId, onUpdate) =>
   new Promise((resolve) => {
     const startedAt = Date.now();
+    let transientFailures = 0;
     const tick = async () => {
       if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
         return resolve({ ok: false, message: 'Timed out waiting for processing to finish' });
       }
       try {
         const res = await filesAPI.getUploadStatus(fileId);
+        transientFailures = 0;
         const s = res.data.data;
         if (s.status === 'ready') return resolve({ ok: true, status: s });
         if (s.status === 'rejected' || s.status === 'failed') {
           return resolve({ ok: false, message: s.statusMessage || 'Upload could not be processed' });
         }
         onUpdate?.(s);
-        setTimeout(tick, POLL_INTERVAL_MS);
+        setTimeout(tick, pollDelay(Date.now() - startedAt));
       } catch (err) {
+        // The file is still being processed on the server. A rate-limit (429),
+        // gateway hiccup or dropped connection must not mark the upload as failed.
+        const code = err?.response?.status;
+        const transient = !err?.response || code === 429 || (code >= 502 && code <= 504);
+        transientFailures += 1;
+        if (transient && transientFailures <= MAX_TRANSIENT_POLL_FAILURES) {
+          return setTimeout(tick, Math.max(pollDelay(Date.now() - startedAt), 5000));
+        }
         return resolve({ ok: false, message: getErrorMessage(err) });
       }
     };
@@ -135,7 +148,7 @@ const UploadPage = () => {
 
     for (const item of pending) {
       if (limitReachedMidBatch) {
-        updateItem(item.id, { status: 'skipped', error: 'Daily upload limit reached' });
+        updateItem(item.id, { status: 'skipped', error: 'Skipped — upload limit reached, please try again later' });
         continue;
       }
 
@@ -174,8 +187,10 @@ const UploadPage = () => {
         }
       } catch (err) {
         if (err?.response?.status === 429) {
+          // Show the server's own wording: it can be the daily limit (regular
+          // users) or a request-rate limit (anyone), and they need different fixes.
           limitReachedMidBatch = true;
-          updateItem(item.id, { status: 'skipped', error: 'Daily upload limit reached' });
+          updateItem(item.id, { status: 'skipped', error: getErrorMessage(err) });
         } else {
           updateItem(item.id, { status: 'error', error: getErrorMessage(err) });
         }

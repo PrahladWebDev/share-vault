@@ -21,6 +21,15 @@ const videoRoutes = require('./routes/videos');
 
 const app = express();
 
+// We run behind nginx. Without this, req.ip is always the proxy's address, so
+// every visitor shares ONE rate-limit bucket (one busy user can lock out
+// everyone). TRUST_PROXY = number of proxy hops in front of the app (default 1).
+const trustProxy = process.env.TRUST_PROXY ?? '1';
+app.set(
+  'trust proxy',
+  /^\d+$/.test(trustProxy) ? parseInt(trustProxy, 10) : trustProxy === 'true' ? true : trustProxy === 'false' ? false : trustProxy
+);
+
 // Connect to MongoDB
 connectDB();
 

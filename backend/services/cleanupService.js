@@ -1,8 +1,8 @@
 const cron = require('node-cron');
 const File = require('../models/File');
-const User = require('../models/User');
 const CleanupLog = require('../models/CleanupLog');
 const logger = require('../utils/logger');
+const { releaseUserStorage } = require('../utils/storageUsage');
 const { minioClient, FILES_BUCKET } = require('../config/minio');
 
 let isRunning = false;
@@ -45,11 +45,10 @@ const runCleanup = async () => {
           logger.warn(`Object not found in MinIO: ${file.path}`);
         }
 
-        // Update user storage usage
-        if (file.owner) {
-          await User.findByIdAndUpdate(file.owner._id, {
-            $inc: { usedStorage: -Math.abs(file.size) },
-          });
+        // Update user storage usage — only for files that were counted
+        // (status 'ready'); failed/rejected uploads never added to it.
+        if (file.owner && file.status === 'ready') {
+          await releaseUserStorage(file.owner._id, file.size);
         }
 
         // Create cleanup log

@@ -13,7 +13,7 @@ const {
 } = require('../controllers/fileController');
 const { authenticate, userOrAdmin } = require('../middleware/auth');
 const { createUploadMiddleware } = require('../middleware/upload');
-const { uploadLimiter, downloadLimiter } = require('../middleware/rateLimiter');
+const { uploadLimiter, downloadLimiter, statusLimiter } = require('../middleware/rateLimiter');
 
 // Public routes
 router.get('/share/:token/info', getFileInfo);
@@ -23,7 +23,7 @@ router.get('/share/:token', downloadLimiter, downloadFile);
 router.use(authenticate);
 
 router.post('/upload', uploadLimiter, createUploadMiddleware, uploadFile);
-router.get('/:id/status', getUploadStatus);
+router.get('/:id/status', statusLimiter, getUploadStatus);
 router.get('/my-files', getMyFiles);
 router.delete('/:id', deleteFile);
 router.post('/:id/share-link', generateShareLink);
