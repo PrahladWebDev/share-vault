@@ -130,12 +130,12 @@ const AdminVideoVaultPage = () => {
 
   // --- Search --------------------------------------------------------------
 
-  let searchTimeout;
+  const searchTimeout = useRef(null);
   const handleSearch = (e) => {
     const val = e.target.value;
     setSearch(val);
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
+    clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
       setDebouncedSearch(val);
       setPage(1);
     }, 400);
@@ -223,7 +223,7 @@ const AdminVideoVaultPage = () => {
     <div className="page-container">
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-2">
             <Film className="h-6 w-6 text-brand-400" />
             Video Vault
           </h1>
@@ -250,7 +250,7 @@ const AdminVideoVaultPage = () => {
           {collectionsLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="skeleton h-28 rounded-2xl" />
+                <div key={i} className="skeleton h-28 rounded-3xl" />
               ))}
             </div>
           ) : collections.length === 0 ? (
@@ -276,7 +276,7 @@ const AdminVideoVaultPage = () => {
                   className="card p-5 cursor-pointer hover:border-brand-600/50 hover:bg-brand-900/10 transition-all group"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className="p-2.5 bg-brand-900/40 rounded-xl border border-brand-800/40">
+                    <div className="p-2.5 bg-brand-900/40 rounded-2xl border border-brand-800/40">
                       <Folder className="h-5 w-5 text-brand-400" />
                     </div>
                     <button
@@ -284,7 +284,7 @@ const AdminVideoVaultPage = () => {
                         e.stopPropagation();
                         setDeleteCollectionTarget(collection);
                       }}
-                      className="p-1.5 rounded-md text-gray-600 hover:text-red-400 hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-2 rounded-full text-gray-600 hover:text-red-400 hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
                       title="Delete collection"
                     >
                       <Trash2 size={14} />
@@ -324,7 +324,7 @@ const AdminVideoVaultPage = () => {
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
             onClick={() => !isUploading && fileInputRef.current?.click()}
-            className={`relative border-2 border-dashed rounded-2xl p-8 mb-6 transition-all cursor-pointer text-center ${
+            className={`relative border-2 border-dashed rounded-3xl p-8 mb-6 transition-all cursor-pointer text-center ${
               isDragging
                 ? 'border-brand-500 bg-brand-900/20'
                 : files.length
@@ -359,8 +359,8 @@ const AdminVideoVaultPage = () => {
               <div className="max-w-lg mx-auto text-left">
                 <div className="max-h-56 overflow-y-auto space-y-2 mb-4 pr-1">
                   {files.map((f, i) => (
-                    <div key={`${f.name}-${f.size}-${i}`} className="flex items-center gap-3 bg-vault-dark/40 rounded-lg px-3 py-2">
-                      <div className="p-2 bg-brand-900/40 rounded-lg border border-brand-800/40 flex-shrink-0">
+                    <div key={`${f.name}-${f.size}-${i}`} className="flex items-center gap-3 bg-vault-dark/40 rounded-xl px-3 py-2">
+                      <div className="p-2 bg-brand-900/40 rounded-xl border border-brand-800/40 flex-shrink-0">
                         <VideoIcon className="h-4 w-4 text-brand-400" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -370,7 +370,7 @@ const AdminVideoVaultPage = () => {
                       {!isUploading && (
                         <button
                           onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-vault-muted transition-colors flex-shrink-0"
+                          className="p-2 rounded-full text-gray-500 hover:text-white hover:bg-vault-muted transition-colors flex-shrink-0"
                         >
                           <X size={14} />
                         </button>
@@ -437,13 +437,13 @@ const AdminVideoVaultPage = () => {
 
           {/* Search */}
           <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
             <input
               type="text"
               placeholder="Search videos in this collection..."
               value={search}
               onChange={handleSearch}
-              className="input-field pl-9"
+              className="input-field pl-12 rounded-full h-12 bg-vault-panel"
             />
           </div>
 
@@ -452,7 +452,7 @@ const AdminVideoVaultPage = () => {
             {isLoading ? (
               <div className="p-5 space-y-3">
                 {Array(5).fill(0).map((_, i) => (
-                  <div key={i} className="skeleton h-14 rounded-lg" />
+                  <div key={i} className="skeleton h-14 rounded-xl" />
                 ))}
               </div>
             ) : videos.length === 0 ? (
@@ -466,19 +466,19 @@ const AdminVideoVaultPage = () => {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-vault-dark/50">
+                  <thead className="bg-vault-dark/40">
                     <tr>
                       {['Video', 'Size', 'Uploaded', 'Actions'].map((h) => (
-                        <th key={h} className="text-left text-xs text-gray-500 font-medium px-4 py-3">{h}</th>
+                        <th key={h} className="text-left text-[11px] uppercase tracking-wider text-gray-400 font-semibold px-4 py-3.5">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-vault-border">
                     {videos.map((video) => (
-                      <tr key={video._id} className="hover:bg-vault-muted/20 transition-colors">
+                      <tr key={video._id} className="hover:bg-white/5 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="p-1.5 bg-brand-900/40 rounded-lg border border-brand-800/40 flex-shrink-0">
+                            <div className="p-1.5 bg-brand-900/40 rounded-xl border border-brand-800/40 flex-shrink-0">
                               <VideoIcon className="h-4 w-4 text-brand-400" />
                             </div>
                             <span className="text-gray-200 truncate max-w-[240px]">
@@ -496,14 +496,14 @@ const AdminVideoVaultPage = () => {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleView(video)}
-                              className="p-1.5 rounded-md text-gray-500 hover:text-brand-400 hover:bg-brand-900/20 transition-colors"
+                              className="p-2 rounded-full text-gray-500 hover:text-brand-400 hover:bg-brand-900/20 transition-colors"
                               title="View"
                             >
                               <PlayCircle size={16} />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(video)}
-                              className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-colors"
+                              className="p-2 rounded-full text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-colors"
                               title="Delete"
                             >
                               <Trash2 size={15} />
@@ -586,7 +586,7 @@ const AdminVideoVaultPage = () => {
               src={streamUrl}
               controls
               autoPlay
-              className="w-full max-h-[70vh] rounded-lg bg-black"
+              className="w-full max-h-[70vh] rounded-xl bg-black"
             >
               Your browser does not support the video tag.
             </video>

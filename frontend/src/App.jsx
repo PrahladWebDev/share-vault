@@ -123,9 +123,11 @@ function App() {
               style: {
                 background: 'rgb(var(--vault-panel))',
                 color: '#e5e7eb',
-                border: '1px solid rgb(var(--vault-border))',
-                borderRadius: '10px',
+                border: '1px solid rgb(var(--vault-border) / 0.7)',
+                borderRadius: '16px',
                 fontSize: '14px',
+                padding: '12px 16px',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
               },
               success: {
                 iconTheme: { primary: '#34d399', secondary: 'rgb(var(--vault-panel))' },

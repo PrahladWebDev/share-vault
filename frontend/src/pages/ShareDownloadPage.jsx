@@ -42,10 +42,10 @@ const ShareDownloadPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-vault-dark flex items-center justify-center">
+      <div className="min-h-screen bg-vault-dark app-backdrop flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Spinner size="lg" className="text-brand-500" />
-          <p className="text-sm text-gray-500">Loading file info...</p>
+          <Spinner size="lg" className="text-brand-400" />
+          <p className="text-sm text-gray-400">Loading file info...</p>
         </div>
       </div>
     );
@@ -53,16 +53,16 @@ const ShareDownloadPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-vault-dark flex flex-col items-center justify-center px-6">
-        <div className="w-full max-w-md text-center">
-          <div className="p-4 bg-vault-panel rounded-2xl border border-vault-border mb-6 inline-block">
-            <FileX className="h-12 w-12 text-red-400" />
+      <div className="min-h-screen bg-vault-dark app-backdrop flex flex-col items-center justify-center px-6">
+        <div className="surface w-full max-w-md text-center p-10 animate-slide-up">
+          <div className="mx-auto mb-5 h-20 w-20 rounded-full bg-red-500/15 flex items-center justify-center">
+            <FileX className="h-10 w-10 text-red-300" />
           </div>
-          <h1 className="text-xl font-bold text-white mb-2">File Not Available</h1>
-          <p className="text-gray-400 text-sm mb-6">{error}</p>
-          <div className="flex gap-3 justify-center">
-            <Link to="/" className="btn-secondary text-sm">Go Home</Link>
-            <Link to="/register" className="btn-primary text-sm">Create Account</Link>
+          <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">File Not Available</h1>
+          <p className="text-gray-400 text-sm mb-7">{error}</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link to="/" className="btn-secondary">Go Home</Link>
+            <Link to="/register" className="btn-primary">Create Account</Link>
           </div>
         </div>
       </div>
@@ -70,29 +70,31 @@ const ShareDownloadPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-vault-dark flex flex-col">
-      {/* Nav */}
-      <nav className="border-b border-vault-border bg-vault-panel px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1 bg-brand-600 rounded-lg">
-            <Vault className="h-4 w-4 text-white" />
+    <div className="min-h-screen bg-vault-dark app-backdrop flex flex-col">
+      {/* Top app bar */}
+      <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-vault-border/60 bg-vault-panel/80 backdrop-blur">
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-brand-600 flex items-center justify-center shadow-md shadow-black/30">
+            <Vault className="h-5 w-5 text-white" />
           </div>
-          <span className="text-sm font-bold text-white">ShareVault</span>
+          <span className="text-base font-bold text-white tracking-tight">ShareVault</span>
         </div>
-        <Link to="/register" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
+        <Link to="/register" className="btn-text !min-h-[36px] !px-4 !py-1 text-xs">
           Create free account →
         </Link>
-      </nav>
+      </header>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="flex-1 flex items-center justify-center px-5 py-10">
         <div className="w-full max-w-md">
-          <div className="card text-center">
+          <div className="surface text-center p-7 sm:p-8 animate-slide-up">
             {/* File icon */}
-            <div className="text-6xl mb-4">{getMimeIcon(fileInfo?.mimeType)}</div>
+            <div className="mx-auto mb-5 h-24 w-24 rounded-[28px] bg-brand-600/15 flex items-center justify-center text-5xl">
+              {getMimeIcon(fileInfo?.mimeType)}
+            </div>
 
             {/* File info */}
-            <h1 className="text-lg font-bold text-white mb-1 break-all">
+            <h1 className="text-xl font-bold text-white mb-1.5 break-all tracking-tight">
               {fileInfo?.originalName}
             </h1>
             <p className="text-sm text-gray-400 mb-6">
@@ -101,56 +103,57 @@ const ShareDownloadPage = () => {
 
             {/* Metadata */}
             <div className="grid grid-cols-3 gap-3 mb-6 text-center">
-              <div className="p-3 bg-vault-dark rounded-xl border border-vault-border">
+              <div className="p-3 bg-brand-600/10 rounded-2xl">
                 <p className="text-lg font-bold text-white font-mono">{fileInfo?.downloadCount || 0}</p>
-                <p className="text-xs text-gray-500">Downloads</p>
+                <p className="text-xs text-gray-400">Downloads</p>
               </div>
-              <div className="p-3 bg-vault-dark rounded-xl border border-vault-border">
-                <p className="text-xs font-medium text-white mb-0.5">
+              <div className="p-3 bg-brand-600/10 rounded-2xl">
+                <p className="text-xs font-semibold text-white mb-0.5 leading-6">
                   {new Date(fileInfo?.uploadedAt).toLocaleDateString()}
                 </p>
-                <p className="text-xs text-gray-500">Uploaded</p>
+                <p className="text-xs text-gray-400">Uploaded</p>
               </div>
-              <div className="p-3 bg-vault-dark rounded-xl border border-vault-border">
+              <div className="p-3 bg-brand-600/10 rounded-2xl">
                 {fileInfo?.expiresAt ? (
                   <>
-                    <p className="text-xs font-medium text-yellow-400 mb-0.5">
+                    <p className="text-xs font-semibold text-yellow-300 mb-0.5 leading-6">
                       {new Date(fileInfo.expiresAt).toLocaleDateString()}
                     </p>
-                    <p className="text-xs text-gray-500">Expires</p>
+                    <p className="text-xs text-gray-400">Expires</p>
                   </>
                 ) : (
                   <>
-                    <p className="text-xs font-medium text-emerald-400 mb-0.5">Never</p>
-                    <p className="text-xs text-gray-500">Expires</p>
+                    <p className="text-xs font-semibold text-emerald-300 mb-0.5 leading-6">Never</p>
+                    <p className="text-xs text-gray-400">Expires</p>
                   </>
                 )}
               </div>
             </div>
 
             {fileInfo?.expiresAt && (
-              <div className="flex items-center gap-2 justify-center mb-5 text-xs text-yellow-500">
+              <div className="inline-flex items-center gap-2 justify-center mb-6 px-3 py-1.5 rounded-full bg-yellow-500/10 text-xs text-yellow-300">
                 <Clock size={13} />
                 Link expires {formatDateTime(fileInfo.expiresAt)}
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
               {fileInfo?.isViewable && (
                 <a
                   href={viewUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn-secondary flex-1 py-3 text-base"
+                  className="btn-secondary flex-1 min-h-[48px] text-base"
                 >
                   <Eye size={18} />
                   View
                 </a>
               )}
               <button
+                type="button"
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="btn-primary flex-1 py-3 text-base"
+                className="btn-primary flex-1 min-h-[48px] text-base"
               >
                 {isDownloading ? (
                   <>
@@ -166,12 +169,10 @@ const ShareDownloadPage = () => {
               </button>
             </div>
 
-            <p className="text-xs text-gray-600 mt-4">
-              No account needed · Safe to download
-            </p>
+            <p className="text-xs text-gray-500 mt-5">No account needed · Safe to download</p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

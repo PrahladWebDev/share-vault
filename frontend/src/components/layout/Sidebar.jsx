@@ -2,25 +2,37 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Upload, Files, Settings, LogOut,
-  Shield, Users, HardDrive, ScrollText, ChevronRight, Vault, Film, FileArchive
+  Shield, Users, HardDrive, ScrollText, Vault, Film, FileArchive
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeSwitcher from '../ui/ThemeSwitcher';
 
-const NavItem = ({ to, icon: Icon, label }) => (
+const NavItem = ({ to, icon: Icon, label, end, onClick }) => (
   <NavLink
     to={to}
+    end={end}
+    onClick={onClick}
     className={({ isActive }) =>
-      `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+      `flex items-center gap-3 h-12 px-4 rounded-full text-sm font-medium transition-all duration-200 ${
         isActive
-          ? 'bg-brand-600/20 text-brand-300 border border-brand-600/30'
-          : 'text-gray-400 hover:text-white hover:bg-vault-muted'
+          ? 'bg-brand-600/25 text-white'
+          : 'text-gray-400 hover:text-white hover:bg-white/5'
       }`
     }
   >
-    <Icon className="h-4.5 w-4.5 flex-shrink-0" size={18} />
-    {label}
+    {({ isActive }) => (
+      <>
+        <Icon size={20} className={`flex-shrink-0 ${isActive ? 'text-brand-300' : ''}`} />
+        {label}
+      </>
+    )}
   </NavLink>
+);
+
+const SectionLabel = ({ children, className = '' }) => (
+  <p className={`text-[11px] uppercase tracking-[0.14em] text-gray-500 px-4 mb-2 font-semibold ${className}`}>
+    {children}
+  </p>
 );
 
 const Sidebar = ({ onClose }) => {
@@ -43,7 +55,7 @@ const Sidebar = ({ onClose }) => {
   ];
 
   const adminLinks = [
-    { to: '/admin', icon: Shield, label: 'Admin Dashboard' },
+    { to: '/admin', icon: Shield, label: 'Admin Dashboard', end: true },
     { to: '/admin/users', icon: Users, label: 'Users' },
     { to: '/admin/files', icon: HardDrive, label: 'All Files' },
     { to: '/admin/logs', icon: ScrollText, label: 'Cleanup Logs' },
@@ -51,62 +63,57 @@ const Sidebar = ({ onClose }) => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-vault-panel border-r border-vault-border transition-colors duration-500">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-vault-border">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-brand-600 rounded-lg">
+    <div className="flex flex-col h-full bg-vault-panel transition-colors duration-500">
+      {/* Brand */}
+      <div className="px-6 pt-6 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-black/30">
             <Vault className="h-5 w-5 text-white" />
           </div>
-          <span className="text-lg font-bold text-white tracking-tight">ShareVault</span>
+          <span className="text-xl font-bold text-white tracking-tight">ShareVault</span>
         </div>
       </div>
 
-      {/* User info */}
-      <div className="px-4 py-4 border-b border-vault-border">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
+      {/* User */}
+      <div className="px-4 pb-4">
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-brand-600/10">
+          <div className="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center text-sm font-semibold text-white flex-shrink-0">
             {user?.name?.[0]?.toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
-          {isAdmin && (
-            <span className="ml-auto badge badge-purple flex-shrink-0">Admin</span>
-          )}
+          {isAdmin && <span className="badge badge-purple flex-shrink-0">Admin</span>}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        <p className="text-[10px] uppercase tracking-widest text-gray-600 px-3 mb-2 font-semibold">
-          Menu
-        </p>
+      <nav className="flex-1 overflow-y-auto px-3 pb-4 space-y-1" aria-label="Main">
+        <SectionLabel className="mt-1">Menu</SectionLabel>
         {userLinks.map((link) => (
-          <NavItem key={link.to} {...link} />
+          <NavItem key={link.to} {...link} onClick={onClose} />
         ))}
 
         {isAdmin && (
           <>
-            <p className="text-[10px] uppercase tracking-widest text-gray-600 px-3 mt-5 mb-2 font-semibold">
-              Admin
-            </p>
+            <SectionLabel className="mt-6">Admin</SectionLabel>
             {adminLinks.map((link) => (
-              <NavItem key={link.to} {...link} />
+              <NavItem key={link.to} {...link} onClick={onClose} />
             ))}
           </>
         )}
       </nav>
 
       {/* Theme + Logout */}
-      <div className="px-3 py-4 border-t border-vault-border space-y-1">
+      <div className="px-3 py-3 border-t border-vault-border/60 space-y-1">
         <ThemeSwitcher variant="compact" />
         <button
+          type="button"
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-900/20 transition-colors"
+          className="flex items-center gap-3 w-full h-12 px-4 rounded-full text-sm font-medium text-gray-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
         >
-          <LogOut size={18} />
+          <LogOut size={20} />
           Sign out
         </button>
       </div>

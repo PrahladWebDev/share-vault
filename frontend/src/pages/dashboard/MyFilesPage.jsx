@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { filesAPI } from '../../api/files';
 import { videosAPI } from '../../api/videos';
@@ -39,12 +39,12 @@ const MyFilesPage = () => {
     onError: (err) => toast.error(getErrorMessage(err)),
   });
 
-  let searchTimeout;
+  const searchTimeout = useRef(null);
   const handleSearchChange = (e) => {
     const val = e.target.value;
     setSearch(val);
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
+    clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
       setDebouncedSearch(val);
       setPage(1);
     }, 400);
@@ -57,8 +57,8 @@ const MyFilesPage = () => {
     <div className="page-container">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">My Files</h1>
-          <p className="text-gray-400 text-sm mt-0.5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">My Files</h1>
+          <p className="text-gray-400 text-sm mt-1">
             {pagination?.total ?? 0} file{pagination?.total !== 1 ? 's' : ''} in your vault
           </p>
         </div>
@@ -70,13 +70,13 @@ const MyFilesPage = () => {
 
       {/* Search */}
       <div className="relative mb-6 group">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 transition-colors duration-200 group-focus-within:text-brand-400" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 transition-colors duration-200 group-focus-within:text-brand-300" />
         <input
           type="text"
           placeholder="Search files..."
           value={search}
           onChange={handleSearchChange}
-          className="input-field pl-9"
+          className="input-field pl-12 rounded-full h-12 bg-vault-panel"
         />
       </div>
 
@@ -86,7 +86,7 @@ const MyFilesPage = () => {
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="card space-y-3">
               <div className="flex gap-3">
-                <div className="skeleton h-11 w-11 rounded-xl" />
+                <div className="skeleton h-12 w-12 rounded-2xl" />
                 <div className="flex-1">
                   <div className="skeleton h-4 w-full rounded mb-2" />
                   <div className="skeleton h-3 w-2/3 rounded" />

@@ -31,7 +31,7 @@ const AdminDashboardPage = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Shield className="h-5 w-5 text-brand-400" />
-            <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Admin Dashboard</h1>
           </div>
           <p className="text-gray-400 text-sm">System overview and management</p>
         </div>
@@ -96,7 +96,7 @@ const AdminDashboardPage = () => {
         {isLoading ? (
           <div className="space-y-3">
             {Array(5).fill(0).map((_, i) => (
-              <div key={i} className="skeleton h-12 rounded-lg" />
+              <div key={i} className="skeleton h-12 rounded-xl" />
             ))}
           </div>
         ) : data?.recentUploads?.length === 0 ? (

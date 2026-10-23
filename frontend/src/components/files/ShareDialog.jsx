@@ -42,14 +42,14 @@ const ShareDialog = ({ file, onClose, isAdmin = false }) => {
     <Modal isOpen={true} onClose={onClose} title="Share File" size="md">
       <div className="space-y-5">
         <div>
-          <p className="text-sm font-medium text-gray-300 mb-1">{file?.originalName}</p>
+          <p className="text-base font-medium text-white mb-2 break-all">{file?.originalName}</p>
           {file?.expiresAt && (
-            <p className="text-xs text-yellow-400 flex items-center gap-1">
+            <p className="chip !bg-yellow-500/15 !text-yellow-300">
               ⏱ Expires in {formatCountdown(file.expiresAt)} · {formatDateTime(file.expiresAt)}
             </p>
           )}
           {!file?.expiresAt && (
-            <p className="text-xs text-emerald-400">✓ No expiry (admin file)</p>
+            <p className="chip !bg-emerald-500/15 !text-emerald-300">✓ No expiry (admin file)</p>
           )}
         </div>
 
@@ -63,7 +63,7 @@ const ShareDialog = ({ file, onClose, isAdmin = false }) => {
                 value={shareUrl}
                 className="input-field text-xs font-mono truncate"
               />
-              <button onClick={handleCopy} className="btn-primary flex-shrink-0 px-3">
+              <button onClick={handleCopy} className="btn-primary flex-shrink-0 !px-4" aria-label="Copy link">
                 {copied ? <Check size={16} className="text-green-300" /> : <Copy size={16} />}
               </button>
             </div>
@@ -83,7 +83,7 @@ const ShareDialog = ({ file, onClose, isAdmin = false }) => {
               href={shareUrl}
               target="_blank"
               rel="noreferrer"
-              className="btn-secondary flex-1 text-xs"
+              className="btn-secondary flex-1"
             >
               <ExternalLink size={14} />
               Open Link
@@ -92,7 +92,7 @@ const ShareDialog = ({ file, onClose, isAdmin = false }) => {
           <button
             onClick={handleRegenerateLink}
             disabled={isRegenerating}
-            className="btn-secondary flex-1 text-xs"
+            className="btn-secondary flex-1"
           >
             {isRegenerating ? <Spinner size="sm" /> : <RefreshCw size={14} />}
             New Link

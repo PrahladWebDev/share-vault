@@ -23,39 +23,39 @@ import toast from 'react-hot-toast';
 // Tinted tile background per file type — mirrors the switch in getMimeIcon
 // so the icon sits on a color that hints at the file type at a glance.
 const getTileClasses = (mimeType) => {
-  if (!mimeType) return 'bg-vault-dark/70 border-vault-border';
-  if (mimeType.startsWith('image/')) return 'bg-purple-500/10 border-purple-500/25';
-  if (mimeType.startsWith('video/')) return 'bg-blue-500/10 border-blue-500/25';
-  if (mimeType.startsWith('audio/')) return 'bg-pink-500/10 border-pink-500/25';
-  if (mimeType.includes('pdf')) return 'bg-red-500/10 border-red-500/25';
-  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar')) return 'bg-yellow-500/10 border-yellow-500/25';
-  if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-400/10 border-blue-400/25';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'bg-emerald-500/10 border-emerald-500/25';
-  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bg-orange-500/10 border-orange-500/25';
-  return 'bg-vault-dark/70 border-vault-border';
+  if (!mimeType) return 'bg-white/5';
+  if (mimeType.startsWith('image/')) return 'bg-purple-500/10';
+  if (mimeType.startsWith('video/')) return 'bg-blue-500/10';
+  if (mimeType.startsWith('audio/')) return 'bg-pink-500/10';
+  if (mimeType.includes('pdf')) return 'bg-red-500/10';
+  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar')) return 'bg-yellow-500/10';
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-400/10';
+  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'bg-emerald-500/10';
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bg-orange-500/10';
+  return 'bg-white/5';
 };
 
 const ActionButton = ({ onClick, href, icon: Icon, label, tone = 'default' }) => {
   const toneClasses =
     tone === 'danger'
-      ? 'text-gray-500 hover:text-red-400 hover:bg-red-900/20'
+      ? 'text-gray-500 hover:text-red-300 hover:bg-red-500/10'
       : tone === 'success'
-      ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20'
-      : 'text-gray-400 hover:text-white hover:bg-vault-muted';
+      ? 'text-emerald-300 hover:bg-emerald-500/10'
+      : 'text-gray-400 hover:text-white hover:bg-white/10';
 
-  const className = `p-2 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95 flex-shrink-0 ${toneClasses}`;
+  const className = `h-9 w-9 inline-flex items-center justify-center rounded-full transition-all duration-200 active:scale-95 flex-shrink-0 ${toneClasses}`;
 
   if (href) {
     return (
       <a href={href} target="_blank" rel="noreferrer" title={label} aria-label={label} className={className}>
-        <Icon size={15} />
+        <Icon size={17} />
       </a>
     );
   }
 
   return (
     <button type="button" onClick={onClick} title={label} aria-label={label} className={className}>
-      <Icon size={15} />
+      <Icon size={17} />
     </button>
   );
 };
@@ -92,14 +92,14 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false, index = 0 }) => {
 
   return (
     <div
-      className="card group min-w-0 overflow-hidden animate-slide-up transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20 hover:border-brand-600/40"
+      className="card group min-w-0 overflow-hidden animate-slide-up transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 hover:border-brand-600/40"
       style={{ animationDelay: `${Math.min(index, 10) * 40}ms`, animationFillMode: 'backwards' }}
     >
       {/* ================= FILE INFO ================= */}
       <div className="flex items-start gap-3 min-w-0">
         {/* File Icon tile */}
         <div
-          className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border transition-transform duration-300 group-hover:scale-105 ${getTileClasses(file.mimeType)}`}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105 ${getTileClasses(file.mimeType)}`}
         >
           {getMimeIcon(file.mimeType)}
         </div>
@@ -150,10 +150,10 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false, index = 0 }) => {
         <div className="flex items-center flex-wrap gap-1.5 mt-3">
           {file.expiresAt && (
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors duration-300 ${
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors duration-300 ${
                 isExpiringSoon
-                  ? 'text-yellow-400 bg-yellow-900/20 border-yellow-800/50'
-                  : 'text-gray-500 bg-vault-dark/60 border-vault-border'
+                  ? 'text-yellow-300 bg-yellow-500/15'
+                  : 'text-gray-400 bg-white/5'
               }`}
             >
               <Clock size={10} className="flex-shrink-0" />
@@ -162,7 +162,7 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false, index = 0 }) => {
           )}
 
           {file.itemType !== 'video' && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-gray-500 bg-vault-dark/60 border border-vault-border">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-gray-400 bg-white/5">
               <Download size={10} className="flex-shrink-0" />
               {file.downloadCount || 0}
             </span>
@@ -171,7 +171,7 @@ const FileCard = ({ file, onDelete, onShare, isAdmin = false, index = 0 }) => {
       )}
 
       {/* ================= ACTIONS ================= */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-vault-border">
+      <div className="flex items-center justify-between mt-3 pt-2 border-t border-vault-border/60">
         <div className="flex items-center gap-1">
           {shareUrl && (
             <ActionButton

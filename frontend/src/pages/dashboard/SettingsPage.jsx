@@ -4,9 +4,33 @@ import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../api/auth';
 import { getErrorMessage } from '../../utils/formatters';
 import Spinner from '../../components/ui/Spinner';
+import TextField from '../../components/ui/TextField';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, User, Lock, Shield, Palette } from 'lucide-react';
 import ThemeSwitcher from '../../components/ui/ThemeSwitcher';
+
+const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+  <div className="flex items-center gap-3 mb-6">
+    <div className="h-10 w-10 rounded-2xl bg-brand-600/20 flex items-center justify-center flex-shrink-0">
+      <Icon className="h-5 w-5 text-brand-300" />
+    </div>
+    <div>
+      <h2 className="text-base font-semibold text-white leading-tight">{title}</h2>
+      {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+    </div>
+  </div>
+);
+
+const VisibilityToggle = ({ shown, onToggle }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    aria-label={shown ? 'Hide password' : 'Show password'}
+    className="icon-btn"
+  >
+    {shown ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+);
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -41,131 +65,84 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="page-container max-w-2xl">
+    <div className="page-container max-w-3xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Settings</h1>
         <p className="text-sm text-gray-400 mt-1">Manage your account preferences</p>
       </div>
 
       {/* Profile section */}
-      <div className="card mb-6">
-        <div className="flex items-center gap-3 mb-5">
-          <User className="h-4 w-4 text-brand-400" />
-          <h2 className="section-title mb-0">Profile</h2>
+      <div className="card !p-6 mb-5">
+        <SectionHeader icon={User} title="Profile" subtitle="Your account details" />
+        <div className="grid sm:grid-cols-2 gap-5">
+          <TextField label="Full name" value={user?.name || ''} readOnly />
+          <TextField label="Email address" type="email" value={user?.email || ''} readOnly />
+          <TextField
+            label="Role"
+            value={user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
+            leading={<Shield size={18} className="text-brand-300" />}
+            readOnly
+          />
+          <TextField
+            label="Member since"
+            value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
+            readOnly
+          />
         </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Full name</label>
-            <input type="text" className="input-field bg-vault-muted" value={user?.name || ''} readOnly />
-          </div>
-          <div>
-            <label className="label">Email address</label>
-            <input type="email" className="input-field bg-vault-muted" value={user?.email || ''} readOnly />
-          </div>
-          <div>
-            <label className="label">Role</label>
-            <div className="input-field bg-vault-muted flex items-center gap-2">
-              <Shield className="h-4 w-4 text-brand-400" />
-              <span className="capitalize text-gray-300">{user?.role}</span>
-            </div>
-          </div>
-          <div>
-            <label className="label">Member since</label>
-            <input
-              type="text"
-              className="input-field bg-vault-muted"
-              value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
-              readOnly
-            />
-          </div>
-        </div>
-        <p className="text-xs text-gray-600 mt-3">Profile editing coming soon.</p>
+        <p className="text-xs text-gray-600 mt-4">Profile editing coming soon.</p>
       </div>
 
       {/* Appearance */}
-      <div className="card mb-6">
-        <div className="flex items-center gap-3 mb-5">
-          <Palette className="h-4 w-4 text-brand-400" />
-          <h2 className="section-title mb-0">Appearance</h2>
-        </div>
-        <p className="text-xs text-gray-500 mb-4">Pick a theme — it applies across the whole app instantly.</p>
+      <div className="card !p-6 mb-5">
+        <SectionHeader icon={Palette} title="Appearance" subtitle="Pick a theme — it applies across the whole app instantly" />
         <ThemeSwitcher variant="full" />
       </div>
 
       {/* Change password */}
-      <div className="card">
-        <div className="flex items-center gap-3 mb-5">
-          <Lock className="h-4 w-4 text-brand-400" />
-          <h2 className="section-title mb-0">Change Password</h2>
-        </div>
+      <div className="card !p-6">
+        <SectionHeader icon={Lock} title="Change Password" subtitle="Use a strong, unique password" />
 
-        <form onSubmit={handleSubmit(onChangePassword)} className="space-y-4">
-          <div>
-            <label className="label">Current password</label>
-            <div className="relative">
-              <input
-                type={showCurrentPw ? 'text' : 'password'}
-                placeholder="Your current password"
-                className={`input-field pr-10 ${errors.currentPassword ? 'border-red-500' : ''}`}
-                {...register('currentPassword', { required: 'Current password is required' })}
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPw(!showCurrentPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-              >
-                {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {errors.currentPassword && (
-              <p className="error-text">{errors.currentPassword.message}</p>
-            )}
-          </div>
+        <form onSubmit={handleSubmit(onChangePassword)} className="space-y-5" noValidate>
+          <TextField
+            label="Current password"
+            type={showCurrentPw ? 'text' : 'password'}
+            autoComplete="current-password"
+            error={errors.currentPassword?.message}
+            trailing={<VisibilityToggle shown={showCurrentPw} onToggle={() => setShowCurrentPw(!showCurrentPw)} />}
+            {...register('currentPassword', { required: 'Current password is required' })}
+          />
 
-          <div>
-            <label className="label">New password</label>
-            <div className="relative">
-              <input
-                type={showNewPw ? 'text' : 'password'}
-                placeholder="Min. 8 characters"
-                className={`input-field pr-10 ${errors.newPassword ? 'border-red-500' : ''}`}
-                {...register('newPassword', {
-                  required: 'New password is required',
-                  minLength: { value: 8, message: 'At least 8 characters' },
-                  pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                    message: 'Must have uppercase, lowercase, and number',
-                  },
-                })}
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPw(!showNewPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-              >
-                {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {errors.newPassword && <p className="error-text">{errors.newPassword.message}</p>}
-          </div>
+          <TextField
+            label="New password"
+            type={showNewPw ? 'text' : 'password'}
+            autoComplete="new-password"
+            helper="Min. 8 characters with upper, lower case and a number"
+            error={errors.newPassword?.message}
+            trailing={<VisibilityToggle shown={showNewPw} onToggle={() => setShowNewPw(!showNewPw)} />}
+            {...register('newPassword', {
+              required: 'New password is required',
+              minLength: { value: 8, message: 'At least 8 characters' },
+              pattern: {
+                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                message: 'Must have uppercase, lowercase, and number',
+              },
+            })}
+          />
 
-          <div>
-            <label className="label">Confirm new password</label>
-            <input
-              type={showNewPw ? 'text' : 'password'}
-              placeholder="Repeat new password"
-              className={`input-field ${errors.confirmNew ? 'border-red-500' : ''}`}
-              {...register('confirmNew', {
-                required: 'Please confirm new password',
-                validate: (v) => v === newPw || 'Passwords do not match',
-              })}
-            />
-            {errors.confirmNew && <p className="error-text">{errors.confirmNew.message}</p>}
-          </div>
+          <TextField
+            label="Confirm new password"
+            type={showNewPw ? 'text' : 'password'}
+            autoComplete="new-password"
+            error={errors.confirmNew?.message}
+            {...register('confirmNew', {
+              required: 'Please confirm new password',
+              validate: (v) => v === newPw || 'Passwords do not match',
+            })}
+          />
 
-          <div className="pt-1">
+          <div className="pt-1 flex justify-end">
             <button type="submit" disabled={isChangingPw} className="btn-primary">
-              {isChangingPw ? <Spinner size="sm" /> : <Lock size={14} />}
+              {isChangingPw ? <Spinner size="sm" /> : <Lock size={16} />}
               {isChangingPw ? 'Changing...' : 'Change Password'}
             </button>
           </div>

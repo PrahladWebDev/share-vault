@@ -143,63 +143,63 @@
   body {
     @apply bg-vault-dark text-gray-100 font-sans transition-colors duration-500;
   }
+
+  ::selection {
+    background: rgb(var(--brand-600) / 0.45);
+    color: #fff;
+  }
+
+  /* Respect users who ask for less motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
+  /* ================================================================ */
+  /* Material-style design tokens                                      */
+  /*  - Buttons: fully rounded (filled / tonal / text / icon)          */
+  /*  - Surfaces: 28px radius + soft elevation                         */
+  /*  - Inputs: outlined, 12px radius                                  */
+  /*  - Badges/chips: tonal, no borders                                */
+  /* ================================================================ */
+
+  /* ---------- Buttons ---------- */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-vault-dark;
+    @apply inline-flex items-center justify-center gap-2 min-h-[40px] px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-full shadow-md shadow-black/20 hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 focus-visible:ring-offset-vault-dark;
   }
 
+  /* Tonal button (secondary) */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-vault-panel border border-vault-border hover:bg-vault-muted text-gray-300 text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 min-h-[40px] px-6 py-2 bg-brand-600/15 hover:bg-brand-600/25 text-brand-200 text-sm font-medium rounded-full transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 min-h-[40px] px-6 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-full shadow-md shadow-black/20 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400;
   }
 
+  .btn-text {
+    @apply inline-flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 text-brand-300 hover:bg-brand-600/15 text-sm font-medium rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400;
+  }
+
+  .btn-outlined {
+    @apply inline-flex items-center justify-center gap-2 min-h-[40px] px-6 py-2 border border-vault-muted text-brand-200 hover:bg-brand-600/10 text-sm font-medium rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400;
+  }
+
+  .icon-btn {
+    @apply inline-flex items-center justify-center h-10 w-10 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400;
+  }
+
+  /* ---------- Inputs ---------- */
   .input-field {
-    @apply w-full bg-vault-panel border border-vault-border rounded-lg px-3.5 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors duration-200;
-  }
-
-  .card {
-    @apply bg-vault-panel border border-vault-border rounded-xl p-5 transition-colors duration-500;
-  }
-
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .badge-green {
-    @apply badge bg-emerald-900/50 text-emerald-400 border border-emerald-800;
-  }
-
-  .badge-red {
-    @apply badge bg-red-900/50 text-red-400 border border-red-800;
-  }
-
-  .badge-yellow {
-    @apply badge bg-yellow-900/50 text-yellow-400 border border-yellow-800;
-  }
-
-  .badge-blue {
-    @apply badge bg-blue-900/50 text-blue-400 border border-blue-800;
-  }
-
-  .badge-purple {
-    @apply badge bg-purple-900/50 text-purple-400 border border-purple-800;
-  }
-
-  .skeleton {
-    @apply bg-gradient-to-r from-vault-panel via-vault-muted to-vault-panel bg-[length:200%_100%] animate-shimmer rounded;
-  }
-
-  .page-container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
-  }
-
-  .section-title {
-    @apply text-lg font-semibold text-white mb-1;
+    @apply w-full bg-vault-dark/40 border border-vault-border rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 hover:border-vault-muted focus:outline-none focus:ring-1 focus:ring-brand-400 focus:border-brand-400 transition-colors duration-200;
   }
 
   .label {
@@ -207,7 +207,66 @@
   }
 
   .error-text {
-    @apply text-red-400 text-xs mt-1;
+    @apply text-red-400 text-xs mt-1.5 ml-1;
+  }
+
+  /* ---------- Surfaces ---------- */
+  .card {
+    @apply bg-vault-panel border border-vault-border/60 rounded-3xl p-5 shadow-lg shadow-black/10 transition-all duration-300;
+  }
+
+  .surface {
+    @apply bg-vault-panel border border-vault-border/60 rounded-3xl shadow-xl shadow-black/20;
+  }
+
+  /* ---------- Chips & badges (tonal) ---------- */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-brand-600/15 text-brand-200 text-xs font-medium px-3 py-1.5;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-green {
+    @apply badge bg-emerald-500/15 text-emerald-300;
+  }
+
+  .badge-red {
+    @apply badge bg-red-500/15 text-red-300;
+  }
+
+  .badge-yellow {
+    @apply badge bg-yellow-500/15 text-yellow-300;
+  }
+
+  .badge-blue {
+    @apply badge bg-blue-500/15 text-blue-300;
+  }
+
+  .badge-purple {
+    @apply badge bg-purple-500/15 text-purple-300;
+  }
+
+  /* ---------- Layout helpers ---------- */
+  .skeleton {
+    @apply bg-gradient-to-r from-vault-panel via-vault-muted to-vault-panel bg-[length:200%_100%] animate-shimmer rounded;
+  }
+
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-white mb-1 tracking-tight;
+  }
+
+  /* Soft brand glow behind the app content */
+  .app-backdrop {
+    background-image:
+      radial-gradient(60rem 28rem at 100% -8%, rgb(var(--brand-600) / 0.14), transparent 70%),
+      radial-gradient(40rem 24rem at -10% 110%, rgb(var(--brand-500) / 0.08), transparent 70%);
+    background-repeat: no-repeat;
   }
 
   /* Diagonal moving stripes overlaid on the upload progress bar */

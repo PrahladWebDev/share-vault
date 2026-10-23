@@ -213,10 +213,10 @@ const UploadPage = () => {
   const allSettled = hasQueue && queue.every((q) => ['done', 'error', 'skipped'].includes(q.status));
 
   return (
-    <div className="page-container max-w-2xl">
+    <div className="page-container max-w-3xl">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Upload Files</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Upload Files</h1>
           <p className="text-gray-400 text-sm mt-1">
             {isAdmin ? 'Unlimited uploads with no size restrictions' : `${limitData?.remaining ?? 2} of 2 uploads remaining today`}
           </p>
@@ -225,7 +225,7 @@ const UploadPage = () => {
 
       {/* Limit warning */}
       {limitReached && (
-        <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-800/40 rounded-xl flex items-center gap-3">
+        <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-800/40 rounded-2xl flex items-center gap-3">
           <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-yellow-300">Daily limit reached</p>
@@ -240,7 +240,7 @@ const UploadPage = () => {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => !isUploading && fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 text-center ${
+        className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center ${
           isUploading ? 'cursor-default opacity-70' : 'cursor-pointer'
         } ${
           isDragging
@@ -339,7 +339,7 @@ const UploadPage = () => {
                 {item.status === 'pending' && !isUploading && (
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-vault-muted transition-colors flex-shrink-0"
+                    className="p-2 rounded-full text-gray-500 hover:text-white hover:bg-vault-muted transition-colors flex-shrink-0"
                   >
                     <X size={16} />
                   </button>
@@ -402,7 +402,7 @@ const UploadPage = () => {
 
       {/* All uploads complete — share-all summary */}
       {batchDone && completed.length > 0 && (
-        <div className="mt-6 p-5 bg-emerald-900/20 border border-emerald-800/40 rounded-xl animate-slide-up">
+        <div className="mt-6 p-5 bg-emerald-900/20 border border-emerald-800/40 rounded-2xl animate-slide-up">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <FileCheck className="h-6 w-6 text-emerald-400 flex-shrink-0 animate-pop-in" />
@@ -429,7 +429,7 @@ const UploadPage = () => {
             {completed.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-2.5 bg-vault-dark/60 rounded-lg border border-vault-border"
+                className="flex items-center gap-3 p-2.5 bg-vault-dark/60 rounded-xl border border-vault-border"
               >
                 <span className="text-lg flex-shrink-0">{getMimeIcon(item.result?.mimeType)}</span>
                 <div className="flex-1 min-w-0">
@@ -443,7 +443,7 @@ const UploadPage = () => {
                       target="_blank"
                       rel="noreferrer"
                       title="View"
-                      className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
+                      className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
                     >
                       <Eye size={14} />
                     </a>
@@ -453,14 +453,14 @@ const UploadPage = () => {
                     target="_blank"
                     rel="noreferrer"
                     title="Open share page"
-                    className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
+                    className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
                   >
                     <ExternalLink size={14} />
                   </a>
                   <button
                     onClick={() => handleCopyLink(item)}
                     title="Copy link"
-                    className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
+                    className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-vault-muted transition-colors"
                   >
                     {copiedId === item.id ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
                   </button>
@@ -484,7 +484,7 @@ const UploadPage = () => {
       {!isAdmin && !hasQueue && (
         <div className="mt-6 grid grid-cols-2 gap-3">
           <div className="card text-center">
-            <p className="text-2xl font-bold text-white font-mono">{limitData?.remaining ?? 2}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-mono">{limitData?.remaining ?? 2}</p>
             <p className="text-xs text-gray-500 mt-0.5">Uploads left today</p>
           </div>
           <div className="card text-center">

@@ -46,7 +46,7 @@ const AdminLogsPage = () => {
     <div className="page-container">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Cleanup Logs</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Cleanup Logs</h1>
           <p className="text-gray-400 text-sm mt-0.5">{pagination?.total ?? 0} total cleanup records</p>
         </div>
         <button
@@ -63,7 +63,7 @@ const AdminLogsPage = () => {
         {isLoading ? (
           <div className="p-5 space-y-3">
             {Array(8).fill(0).map((_, i) => (
-              <div key={i} className="skeleton h-10 rounded-lg" />
+              <div key={i} className="skeleton h-10 rounded-xl" />
             ))}
           </div>
         ) : logs.length === 0 ? (
@@ -75,10 +75,10 @@ const AdminLogsPage = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-vault-dark/50">
+              <thead className="bg-vault-dark/40">
                 <tr>
                   {['File', 'Owner', 'Size', 'Reason', 'Status', 'Deleted At', 'Notes'].map((h) => (
-                    <th key={h} className="text-left text-xs text-gray-500 font-medium px-4 py-3">{h}</th>
+                    <th key={h} className="text-left text-[11px] uppercase tracking-wider text-gray-400 font-semibold px-4 py-3.5">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -87,7 +87,7 @@ const AdminLogsPage = () => {
                   const reason = reasonLabels[log.reason] || { label: log.reason, cls: 'badge-blue' };
                   const status = statusLabels[log.status] || { label: log.status, cls: 'badge-blue' };
                   return (
-                    <tr key={log._id} className="hover:bg-vault-muted/20 transition-colors">
+                    <tr key={log._id} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-3 text-gray-300 truncate max-w-[160px]">
                         {log.originalName || log.storedName || '—'}
                       </td>

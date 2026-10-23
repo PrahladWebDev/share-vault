@@ -40,6 +40,8 @@ module.exports = {
         'drop-glow': 'dropGlow 1.6s ease-in-out infinite',
         float: 'float 2.2s ease-in-out infinite',
         'progress-stripes': 'progressStripes 1s linear infinite',
+        'drawer-in': 'drawerIn 0.28s cubic-bezier(0.2, 0, 0, 1)',
+        'dialog-in': 'dialogIn 0.22s cubic-bezier(0.2, 0, 0, 1)',
       },
       keyframes: {
         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -61,6 +63,8 @@ module.exports = {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-6px)' },
         },
+        drawerIn: { from: { transform: 'translateX(-100%)' }, to: { transform: 'translateX(0)' } },
+        dialogIn: { from: { opacity: '0', transform: 'scale(0.92)' }, to: { opacity: '1', transform: 'scale(1)' } },
         progressStripes: {
           '0%': { backgroundPosition: '0 0' },
           '100%': { backgroundPosition: '28px 0' },

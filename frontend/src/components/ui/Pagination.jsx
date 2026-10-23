@@ -15,40 +15,49 @@ const Pagination = ({ pagination, onPageChange }) => {
   };
 
   return (
-    <div className="flex items-center justify-between mt-6">
+    <nav
+      aria-label="Pagination"
+      className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6"
+    >
       <p className="text-sm text-gray-400">
-        Page {page} of {pages} ({pagination.total} total)
+        Page {page} of {pages} <span className="text-gray-600">·</span> {pagination.total} total
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 p-1 rounded-full bg-vault-panel border border-vault-border/60">
         <button
+          type="button"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-vault-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          aria-label="Previous page"
+          className="icon-btn h-9 w-9"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         {getPages().map((p) => (
           <button
             key={p}
+            type="button"
             onClick={() => onPageChange(p)}
-            className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+            aria-current={p === page ? 'page' : undefined}
+            className={`h-9 min-w-[36px] px-2 rounded-full text-sm font-medium transition-colors ${
               p === page
-                ? 'bg-brand-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-vault-muted'
+                ? 'bg-brand-600 text-white shadow-md shadow-black/20'
+                : 'text-gray-400 hover:text-white hover:bg-white/10'
             }`}
           >
             {p}
           </button>
         ))}
         <button
+          type="button"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pages}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-vault-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          aria-label="Next page"
+          className="icon-btn h-9 w-9"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
-    </div>
+    </nav>
   );
 };
 
