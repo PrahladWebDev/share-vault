@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Menu, Vault } from 'lucide-react';
+import { Menu } from 'lucide-react';
+import Logo from '../ui/Logo';
 
 const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,12 +62,7 @@ const AppLayout = () => {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-brand-600 flex items-center justify-center">
-              <Vault className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-base font-semibold text-white tracking-tight">ShareVault</span>
-          </div>
+          <Logo size={28} className="!gap-2" wordmarkClassName="text-base" />
         </header>
 
         <main className="flex-1 overflow-y-auto app-backdrop">

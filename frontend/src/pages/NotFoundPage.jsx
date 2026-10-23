@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Vault, Home, ArrowLeft } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
+import { LogoMark } from '../components/ui/Logo';
 
 const NotFoundPage = () => {
   return (
     <div className="min-h-screen bg-vault-dark app-backdrop flex flex-col items-center justify-center px-6 text-center">
       <div className="surface p-10 max-w-md w-full animate-slide-up">
         <div className="flex justify-center mb-6">
-          <div className="h-16 w-16 rounded-[22px] bg-brand-600/20 flex items-center justify-center">
-            <Vault className="h-8 w-8 text-brand-300" />
-          </div>
+          <LogoMark size={64} />
         </div>
         <p className="text-7xl font-black text-brand-600/70 mb-2 font-mono tracking-tight">404</p>
         <h1 className="text-2xl font-bold text-white mb-3 tracking-tight">Page not found</h1>

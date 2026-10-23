@@ -1,4 +1,5 @@
-import { Vault, ShieldCheck, Clock, Link2 } from 'lucide-react';
+import { ShieldCheck, Clock, Link2 } from 'lucide-react';
+import Logo, { LogoMark, Wordmark } from '../ui/Logo';
 
 const FEATURES = [
   { icon: ShieldCheck, label: 'Encrypted', desc: 'JWT-secured transfers' },
@@ -20,11 +21,14 @@ const AuthShell = ({ icon: Icon, title, subtitle, children, footer }) => (
 
         <div className="relative z-10 text-center max-w-md">
           <div className="flex justify-center mb-7">
-            <div className="h-20 w-20 rounded-[28px] bg-brand-600 flex items-center justify-center shadow-2xl shadow-black/40">
-              <Vault className="h-10 w-10 text-white" />
-            </div>
+            <LogoMark size={96} className="shadow-2xl" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">ShareVault</h1>
+          <h1 className="mb-3">
+            <Wordmark className="text-5xl" />
+          </h1>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
+            Secure File Sharing Platform
+          </p>
           <p className="text-gray-300 text-lg leading-relaxed">
             Secure file sharing with automatic expiry. Upload, share, and manage your files with confidence.
           </p>
@@ -47,11 +51,8 @@ const AuthShell = ({ icon: Icon, title, subtitle, children, footer }) => (
     <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
       <div className="w-full max-w-md">
         {/* Mobile brand */}
-        <div className="flex items-center justify-center gap-3 mb-6 lg:hidden">
-          <div className="h-10 w-10 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-black/30">
-            <Vault className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-white tracking-tight">ShareVault</span>
+        <div className="flex items-center justify-center mb-6 lg:hidden">
+          <Logo size={40} wordmarkClassName="text-xl" />
         </div>
 
         <div className="surface p-7 sm:p-8 animate-slide-up">

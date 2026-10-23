@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { filesAPI } from '../api/files';
 import { formatBytes, formatDateTime, getMimeIcon } from '../utils/formatters';
 import Spinner from '../components/ui/Spinner';
-import { Download, Vault, Clock, FileX, Eye } from 'lucide-react';
+import { Download, Clock, FileX, Eye } from 'lucide-react';
+import Logo from '../components/ui/Logo';
 
 const ShareDownloadPage = () => {
   const { token } = useParams();
@@ -73,12 +74,7 @@ const ShareDownloadPage = () => {
     <div className="min-h-screen bg-vault-dark app-backdrop flex flex-col">
       {/* Top app bar */}
       <header className="h-16 px-4 sm:px-6 flex items-center justify-between border-b border-vault-border/60 bg-vault-panel/80 backdrop-blur">
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-brand-600 flex items-center justify-center shadow-md shadow-black/30">
-            <Vault className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-base font-bold text-white tracking-tight">ShareVault</span>
-        </div>
+        <Logo size={36} className="!gap-2.5" wordmarkClassName="text-lg" />
         <Link to="/register" className="btn-text !min-h-[36px] !px-4 !py-1 text-xs">
           Create free account →
         </Link>

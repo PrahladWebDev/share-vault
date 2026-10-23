@@ -2,10 +2,11 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Upload, Files, Settings, LogOut,
-  Shield, Users, HardDrive, ScrollText, Vault, Film, FileArchive
+  Shield, Users, HardDrive, ScrollText, Film, FileArchive
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ThemeSwitcher from '../ui/ThemeSwitcher';
+import Logo from '../ui/Logo';
 
 const NavItem = ({ to, icon: Icon, label, end, onClick }) => (
   <NavLink
@@ -66,12 +67,7 @@ const Sidebar = ({ onClose }) => {
     <div className="flex flex-col h-full bg-vault-panel transition-colors duration-500">
       {/* Brand */}
       <div className="px-6 pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-brand-600 flex items-center justify-center shadow-lg shadow-black/30">
-            <Vault className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-white tracking-tight">ShareVault</span>
-        </div>
+        <Logo size={40} wordmarkClassName="text-xl" />
       </div>
 
       {/* User */}
